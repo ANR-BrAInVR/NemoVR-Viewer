@@ -76,11 +76,25 @@ IP = {'Tracking': '192.168.0.2', 'Rendering': '192.168.0.1'}
 UDPserverRendering = (IP['Rendering'], 50771)
 
 # Global strings (communication between processes)
-manager = mp.Manager()
-expID = manager.Value(c_wchar_p, 'MyExp')
-subjectID = manager.Value(c_wchar_p, 'MySubject')
-file = manager.Value(c_wchar_p, 'MyFile')
-# species = manager.Value(c_wchar_p, 'Anemonefish')
+# NOTE: manager and its values are initialized in __main__ to ensure
+# Windows compatibility (mp.Manager() must not be called at module level
+# on Windows, where multiprocessing uses 'spawn' instead of 'fork').
+manager = None
+expID = None
+subjectID = None
+file = None
+species = None
+resultsDir_shared = None   # Runtime resultsDir derived from the selected tsv file
+
+def _init_shared_strings():
+    """Initialize mp.Manager shared strings. Must be called inside __main__."""
+    global manager, expID, subjectID, file, species, resultsDir_shared
+    manager = mp.Manager()
+    expID = manager.Value(c_wchar_p, 'MyExp')
+    subjectID = manager.Value(c_wchar_p, 'MySubject')
+    file = manager.Value(c_wchar_p, 'MyFile')
+    species = manager.Value(c_wchar_p, 'Anemonefish')
+    resultsDir_shared = manager.Value(c_wchar_p, '')
 
 # Viewer object
 class Viewer:
@@ -95,11 +109,7 @@ class Viewer:
         self.log.LogText(1, 'Viewer() called')
 
         # Load settings
-        self.LoadSettingsFile('Settings')
-
-        # Load species detection settings
-        self.LoadSettingsFile('Color settings - %s' % self.speciesName)
-
+        self.LoadSettingsFile('Settings.txt')
 
         # Initialize process shared variables
         viewMode.value = self.viewMode
@@ -112,11 +122,24 @@ class Viewer:
         quit.value = False
         saveVideos.value = self.saveVideos
         sendPos3D.value = self.sendPos3D
+        self.resLogFile = ''
         if self.expID != '':
-            self.resLogFile = self.resultsDir + '/' + self.expID + '/' + self.expID + '_files.tsv'
+            self.resLogFile = os.path.join(self.resultsDir, self.expID, self.expID + '_files.tsv')
+        # Initialize shared resultsDir with the settings value as default
+        resultsDir_shared.value = self.resultsDir
 
-        # Starts GUI
-        self.ViewerUIproc = mp.Process(target=self.StartViewerUI)
+        # Starts GUI — use module-level function so Windows 'spawn' can pickle the target.
+        # All shared variables are passed explicitly since the child process cannot inherit
+        # module-level globals under Windows 'spawn'.
+        self.ViewerUIproc = mp.Process(
+            target=_start_viewer_ui,
+            args=(self.log.logLevel, self.resultsDir, self.resLogFile,
+                  # mp.Value shared flags
+                  viewMode, showDLC, showTrack, trailFrames, useCyclop,
+                  speed, startPlayer, stopPlayer, quit, play,
+                  imgIndex, nFrames, framerate, saveVideos, sendPos3D,
+                  # mp.Manager shared strings
+                  expID, subjectID, file, species, resultsDir_shared))
         self.ViewerUIproc.start()
         self.log.LogText(2, 'Viewer: GUI process started')
 
@@ -151,24 +174,25 @@ class Viewer:
     def __del__(self):
         """Destructor"""
 
-        self.log.LogText(1, 'Viewer destructor called')
+        if hasattr(self, 'log'):
+            self.log.LogText(1, 'Viewer destructor called')
 
         # Kill ViewerUI if still there
-        self.ViewerUIproc.kill()
+        if hasattr(self, 'ViewerUIproc') and self.ViewerUIproc is not None:
+            try:
+                self.ViewerUIproc.kill()
+            except Exception:
+                pass
 
         # Close openCV windows and plot if any
         cv2.destroyAllWindows()
         plt.close()
 
         # Give time for processes to end
-        time.sleep(0.5)
-
-
-    def StartViewerUI(self):
-
-        myQtApp = QApplication(sys.argv)
-        self.UI = ViewerUI(self.log, self.resultsDir, self.resLogFile)
-        myQtApp.exec_()
+        try:
+            time.sleep(0.5)
+        except Exception:
+            pass
 
 
     def VideoPlayer(self):
@@ -182,11 +206,13 @@ class Viewer:
         stopPlayer.value = False
 
         # Get keyColors and keyNames
-        # keyColors = keyColorsDict[species.value]
-        # keyNames = keyColorsDict[species.value].keys()
+        keyColors = keyColorsDict[species.value]
+        keyNames = keyColorsDict[species.value].keys()
 
-        # Full path with filename basis
-        fullNameBasis = '%s/%s/%s/%s' % (self.resultsDir, expID.value, subjectID.value, file.value)
+        # Full path with filename basis — use runtime resultsDir (from selected tsv file)
+        # rather than self.resultsDir which may be the Settings.txt default (Linux path).
+        rDir = resultsDir_shared.value if resultsDir_shared.value else self.resultsDir
+        fullNameBasis = os.path.join(rDir, expID.value, subjectID.value, file.value)
 
         # Video variables
         camCount = len(self.camList)        # Number of cameras
@@ -386,7 +412,7 @@ class Viewer:
                 # Adds markers inferred by DLC
                 if showDLC.value:
                     self.log.LogText(3, 'VideoPlayer(%d): Draw markers inferred by DLC (imgIndex=%d) ' % (camNb, imgIndex.value))
-                    for keyInd, keyName in enumerate(self.keyNames):
+                    for keyName in keyNames:
                         # Get marker position and proba
                         if resize:
                             xKey, yKey = res2D['pos(%s)_cam%d' % (keyName, camNb)][fInd].astype(int)
@@ -395,7 +421,7 @@ class Viewer:
                         rKey = int(keyRadius * 1.12*np.sqrt(res2D['proba(%s)_cam%d' % (keyName, camNb)][fInd])) if self.sizeToProba else int(keyRadius)
                         # Draws circle on inferred markers (size depends on probability)
                         self.log.LogText(4, 'VideoPlayer: On cam%d, marker \'%s\' is drawn at (%d, %d) with r=%d' % (camNb, keyName, xKey, yKey, rKey))
-                        img = cv2.circle(img, (xKey, yKey), rKey, self.keyColors[keyInd], thickness=cv2.FILLED)
+                        img = cv2.circle(img, (xKey, yKey), rKey, keyColors[keyName], thickness=cv2.FILLED)
 
                 # Resize images when full
                 if resize:
@@ -470,7 +496,7 @@ class Viewer:
         cv2.destroyAllWindows()
 
 
-    def Plot3DPlayer(self, plotViews=['-x+y']):     # ['-y-x', '-x+z', '-y+z']
+    def Plot3DPlayer(self, plotViews=['-x+y']):  # ['-y-x', '-x+z', '-y+z']
         """Starts 3D plot player with tracking and DLC results (THREAD)"""
 
         self.log.LogText(1, 'Plot3DPlayer() called')
@@ -649,12 +675,12 @@ class Viewer:
             # Waits necessary time for correct speed playback
             t1 = time.time_ns()
             if speed.value >= 1.0:
-                tPad = 1.0/framerate.value - float(t1-t0)/1E9                # In seconds
+                tPad = 1.0 / framerate.value - float(t1 - t0) / 1E9  # In seconds
             else:
-                tPad = 1.0/speed.value/framerate.value - float(t1-t0)/1E9    # In seconds
+                tPad = 1.0 / speed.value / framerate.value - float(t1 - t0) / 1E9  # In seconds
             if tPad > 0:
                 time.sleep(tPad)
-                self.log.LogText(3, 'Plot3DPlayer: (%d) pad=%.1f ms' % (fInd, 1000*tPad))
+                self.log.LogText(3, 'Plot3DPlayer: (%d) pad=%.1f ms' % (fInd, 1000 * tPad))
 
             # Get new time
             t0 = time.time_ns()
@@ -671,14 +697,14 @@ class Viewer:
                 posField = 'pos(Cyclop)' if useCyclop.value else 'pos(0)'
 
                 # Draws trail and current (therefore find+1)
-                for fIndTrail in range(max(fInd-trailFrames.value+1, 0), fInd+1):
+                for fIndTrail in range(max(fInd - trailFrames.value + 1, 0), fInd + 1):
                     xPos, yPos, zPos = res3D[posField][fIndTrail]
                     if xPos == -1 and yPos == -1 and zPos == -1: continue
                     pos['x'].append(xPos)
                     pos['y'].append(yPos)
                     pos['z'].append(zPos)
                     pos['c'].append([(fInd - fIndTrail) / trailFrames.value] * 3)
-                    pos['r'].append(1.0*res3D['proba(Cyclop)'][fIndTrail] if useCyclop.value else 1.0)
+                    pos['r'].append(1.0 * res3D['proba(Cyclop)'][fIndTrail] if useCyclop.value else 1.0)
 
                 # Draws heading and gazeDir vectors
                 posInd = len(pos['x']) - 1
@@ -705,12 +731,12 @@ class Viewer:
 
             # Update animation positions
             for pv in plotViews:
-                if len(pv) == 6:    # 3D plot
+                if len(pv) == 6:  # 3D plot
                     _, x, _, y, _, z = pv
                     # scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
                     # scPlots[pv].set_color(pos['c'])
                     # scPlots[pv].set_sizes(pos['r'])
-                else:               # 2D plot
+                else:  # 2D plot
                     _, x, _, y = pv
                     scPlots[pv].set_offsets(list(zip(pos[x], pos[y])))
                     scPlots[pv].set_color(pos['c'])
@@ -729,7 +755,7 @@ class Viewer:
                 # Convert canvas to image and to BGR
                 img = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
                 img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)      # RGB to BGR
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  # RGB to BGR
 
                 videoOut.write(img)
                 self.log.LogText(3, ' Plot3DPlayer: output video writers updated')
@@ -758,7 +784,7 @@ class Viewer:
     def LoadSettingsFile(self, settingsName, storeVariable='self'):
         """Loads specific settings to self or another object's attributes"""
 
-        fname = 'Settings/' + settingsName + '.txt'
+        fname = os.path.join('Settings', settingsName)
         if not os.path.isfile(fname):
             print('Error: could not find \'%s\' file' % settingsName)
             return
@@ -775,6 +801,46 @@ class Viewer:
 
         # Updates log level
         self.log.logLevel = self.logLevel
+
+
+# Module-level function used as the multiprocessing target for the GUI process.
+# Must be at module level (not a bound method) so Windows 'spawn' can pickle it.
+# All shared mp.Value / mp.Manager proxies are passed explicitly and injected into
+# this module's globals, because Windows 'spawn' re-imports the module fresh.
+def _start_viewer_ui(logLevel, resultsDir, resLogFile,
+                     _viewMode, _showDLC, _showTrack, _trailFrames, _useCyclop,
+                     _speed, _startPlayer, _stopPlayer, _quit, _play,
+                     _imgIndex, _nFrames, _framerate, _saveVideos, _sendPos3D,
+                     _expID, _subjectID, _file, _species, _resultsDir_shared):
+    import sys as _sys
+    # Inject shared variables into this module's global namespace so all
+    # classes (ViewerUI etc.) see the same objects as the main process.
+    g = globals()
+    g['viewMode']          = _viewMode
+    g['showDLC']           = _showDLC
+    g['showTrack']         = _showTrack
+    g['trailFrames']       = _trailFrames
+    g['useCyclop']         = _useCyclop
+    g['speed']             = _speed
+    g['startPlayer']       = _startPlayer
+    g['stopPlayer']        = _stopPlayer
+    g['quit']              = _quit
+    g['play']              = _play
+    g['imgIndex']          = _imgIndex
+    g['nFrames']           = _nFrames
+    g['framerate']         = _framerate
+    g['saveVideos']        = _saveVideos
+    g['sendPos3D']         = _sendPos3D
+    g['expID']             = _expID
+    g['subjectID']         = _subjectID
+    g['file']              = _file
+    g['species']           = _species
+    g['resultsDir_shared'] = _resultsDir_shared
+
+    log = Log(logLevel=logLevel, showTime=True)
+    myQtApp = QApplication(_sys.argv)
+    ui = ViewerUI(log, resultsDir, resLogFile)
+    myQtApp.exec_()
 
 
 # GUI for tracking
@@ -826,7 +892,8 @@ class ViewerUI(QWidget):
         self.viewModeLbl.setGeometry(posX + 20, posY, 100, 30)
         self.viewModeCombo = QComboBox(self)
         self.viewModeCombo.setGeometry(posX + 120, posY, 90, 30)
-        self.viewModeCombo.addItems(['2D videos', '3D plots'])
+        # self.viewModeCombo.addItems(['2D videos', '3D plots'])
+        self.viewModeCombo.addItems(['2D videos'])
         self.viewModeCombo.setEnabled(True)
         self.viewModeCombo.setCurrentIndex(viewMode.value - 2)
         self.viewModeCombo.currentIndexChanged.connect(self.ViewMode)
@@ -957,7 +1024,7 @@ class ViewerUI(QWidget):
 
         # Opens file selection dialog box
         selectedFile = QFileDialog.getOpenFileName(parent=self, caption='Select results file',
-                                                   directory=os.chdir(self.resultsDir),  filter='log file (*.tsv)',)[0]
+                                                   directory=self.resultsDir, filter='log file (*.tsv)',)[0]
         # Reset subject and trial combo box
         self.subjCombo.clear()
         self.subjCombo.setEnabled(False)
@@ -971,6 +1038,10 @@ class ViewerUI(QWidget):
         self.speedCombo.setEnabled(False)
 
         if selectedFile != '':
+            # Derive resultsDir from the selected file: it is two levels up (Results/expID/expID_files.tsv)
+            # i.e. the parent of the folder containing the tsv file.
+            self.resultsDir = os.path.dirname(os.path.dirname(selectedFile))
+            resultsDir_shared.value = self.resultsDir
             self.LoadResLogFile(selectedFile)
             self.log.LogText(2, 'ViewerUI: resLog file selected \'%s\'' % selectedFile)
         else:
@@ -1036,14 +1107,14 @@ class ViewerUI(QWidget):
 
         # And store expID, subjectID and file in the viewer properties
         expID.value = self.resLogSubj[ind][0]
-        # if 'clowns' in expID.value.lower():
-        #     species.value = 'Anemonefish'
-        # elif 'maninis' in expID.value.lower():
-        #     species.value = 'Surgeonfish'
-        # elif 'dascyllus' in expID.value.lower():
-        #     species.value = 'Damselfish'
-        # elif 'aruanus' in expID.value.lower():
-        #     species.value = 'Aruanus'
+        if 'clowns' in expID.value.lower():
+            species.value = 'Anemonefish'
+        elif 'maninis' in expID.value.lower():
+            species.value = 'Surgeonfish'
+        elif 'dascyllus' in expID.value.lower():
+            species.value = 'Damselfish'
+        elif 'aruanus' in expID.value.lower():
+            species.value = 'Aruanus'
 
         subjectID.value = self.resLogSubj[ind][1]
         file.value = self.resLogSubj[ind][4]
@@ -1401,6 +1472,12 @@ class BlitManager:
 
 # Starts everything (if this is the main process)
 if __name__ == '__main__':
+
+    # Required on Windows for multiprocessing with frozen executables
+    mp.freeze_support()
+
+    # Initialize shared string variables (must be done inside __main__ on Windows)
+    _init_shared_strings()
 
     # Move to TrackingMaster.py directory (if not already)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

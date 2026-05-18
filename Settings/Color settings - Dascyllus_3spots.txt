@@ -1,0 +1,3 @@
+keyNames		['Nose', 'SpotHead', 'TailTip', 'FinL', 'SpotL', 'FinR', 'SpotR']
+keyColors		[(255, 0, 0), (255, 0, 99), (255, 0, 198), (0, 180, 0), (0, 255, 0), (0, 0, 180), (0, 0, 255)]
+

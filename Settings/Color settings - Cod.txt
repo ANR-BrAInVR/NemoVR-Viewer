@@ -1,0 +1,3 @@
+keyNames		['Snout', 'EyeL', 'EyeR', 'FinL', 'FinTipL', 'FinR', 'FinTipR', 'FinFront', 'FinMiddle', 'FinBack', 'Tail', 'TailTip']
+keyColors		[(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 160, 0), (0, 220, 0), (0, 0, 160), (0, 0, 220), (255, 0, 40), (255, 0, 80), (255, 0, 120), (255, 0, 160), (255, 0, 200)]
+

@@ -1,0 +1,3 @@
+keyNames		['Mouth', 'EyeL', 'EyeR', 'FinL', 'FinR', 'Tailstart']
+keyColors		[(255, 0, 0), (0, 255, 0), (80, 80, 255), (80, 255, 80), (255, 80, 80), (255, 100, 100)]
+

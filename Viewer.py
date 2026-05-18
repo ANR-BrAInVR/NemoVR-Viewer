@@ -36,21 +36,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from ctypes import c_wchar_p
 
-
 # DLC markers variables
-keyColorsDict = {}
-keyColorsDict['Anemonefish'] = {'Nose': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'StripeFront': (255, 0, 66), 'StripeBack': (255, 0, 122),
-           'FinL': (0, 180, 0), 'FinR': (0, 0, 180), 'TailTip': (255, 0, 198)}     # For Clownfish DLC model
-keyColorsDict['Surgeonfish'] = {'Mouth': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'Stripe1': (255, 0, 33), 'Stripe2': (255, 0, 66), 'Stripe3': (255, 0, 99),
-            'Stripe4': (255, 0, 132), 'Stripe5': (255, 0, 165), 'Tail': (255, 0, 198)}       # For Maninis DLC model
-keyColorsDict['Aruanus'] = {'Mouth': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'Stripe1': (255, 0, 50), 'Stripe2': (255, 0, 100),
-            'Stripe3': (255, 0, 150), 'Tail': (255, 0, 200)}     # For Dascyllys_humbug DLC model
-keyColorsDict['Damselfish'] = {'Nose': (255, 0, 0), 'SpotHead': (255, 0, 99), 'SpotR': (0, 255, 0), 'SpotL': (0, 0, 255),
-            'FinL': (0, 180, 0), 'FinR': (0, 0, 180), 'TailTip': (255, 0, 198)}     # For Dascyllys_3Spots DLC model
-keyColorsDict['Cod'] = {'Snout': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'FinL': (0, 160, 0), 'FinTipL': (0, 220, 0),
-            'FinR': (0, 0, 160), 'FinTipR': (0, 0, 220), 'FinFront': (255, 0, 40), 'FinMiddle': (255, 0, 80), 'FinBack': (255, 0, 120),
-            'Tail': (255, 0, 160), 'TailTip': (255, 0, 200)}     # For Cod DLC model
-keyRadius = 3        # Maximal radius size of the markers for monitoring (when inference p=1)
+keyRadius = 3       # Maximal radius size of the markers for monitoring (when inference p=1)
 cyclopRadius = 5    # Maximal radius size of cyclop for monitoring (when inference p=1)
 cyclopColor = 0     # Detection or cyclop marker center color (white)
 
@@ -75,13 +62,6 @@ sendPos3D = mp.Value('B', 0)       # Stream 3D pos to rendering
 IP = {'Tracking': '192.168.0.2', 'Rendering': '192.168.0.1'}
 UDPserverRendering = (IP['Rendering'], 50771)
 
-# Global strings (communication between processes)
-manager = mp.Manager()
-expID = manager.Value(c_wchar_p, 'MyExp')
-subjectID = manager.Value(c_wchar_p, 'MySubject')
-file = manager.Value(c_wchar_p, 'MyFile')
-# species = manager.Value(c_wchar_p, 'Anemonefish')
-
 # Viewer object
 class Viewer:
     """Object that reads videos and results files and show it on screen"""
@@ -89,6 +69,12 @@ class Viewer:
     # Constructor with param initialization
     def __init__(self):
         """Initializes viewer's parameters"""
+
+        # Strings (communication between processes)
+        manager = mp.Manager()
+        self.expID_M = manager.Value(c_wchar_p, 'MyExp')
+        self.subjectID_M = manager.Value(c_wchar_p, 'MySubject')
+        self.file_M = manager.Value(c_wchar_p, 'MyFile')
 
         # Log object
         self.log = Log(logLevel=2, showTime=True)
@@ -99,7 +85,6 @@ class Viewer:
 
         # Load species detection settings
         self.LoadSettingsFile('Color settings - %s' % self.speciesName)
-
 
         # Initialize process shared variables
         viewMode.value = self.viewMode
@@ -113,7 +98,9 @@ class Viewer:
         saveVideos.value = self.saveVideos
         sendPos3D.value = self.sendPos3D
         if self.expID != '':
-            self.resLogFile = self.resultsDir + '/' + self.expID + '/' + self.expID + '_files.tsv'
+            self.expID_M.value = self.expID
+            self.resLogFile = os.path.join(self.resultsDir, self.expID, self.expID + '_files.tsv')
+            # self.resultsDir + '/' + self.expID + '/' + self.expID + '_files.tsv'
 
         # Starts GUI
         self.ViewerUIproc = mp.Process(target=self.StartViewerUI)
@@ -167,7 +154,7 @@ class Viewer:
     def StartViewerUI(self):
 
         myQtApp = QApplication(sys.argv)
-        self.UI = ViewerUI(self.log, self.resultsDir, self.resLogFile)
+        ViewerUI(self.log, self.resultsDir, self.resLogFile, self.expID_M, self.subjectID_M, self.file_M)
         myQtApp.exec_()
 
 
@@ -181,12 +168,8 @@ class Viewer:
         playStarted = False
         stopPlayer.value = False
 
-        # Get keyColors and keyNames
-        # keyColors = keyColorsDict[species.value]
-        # keyNames = keyColorsDict[species.value].keys()
-
         # Full path with filename basis
-        fullNameBasis = '%s/%s/%s/%s' % (self.resultsDir, expID.value, subjectID.value, file.value)
+        fullNameBasis = '%s/%s/%s/%s' % (self.resultsDir, self.expID_M.value, self.subjectID_M.value, self.file_M.value)
 
         # Video variables
         camCount = len(self.camList)        # Number of cameras
@@ -480,12 +463,8 @@ class Viewer:
         playStarted = False
         stopPlayer.value = False
 
-        # Get keyColors and keyNames
-        # keyColors = keyColorsDict[species.value]
-        # keyNames = keyColorsDict[species.value].keys()
-
         # Full path with filename basis
-        fullNameBasis = '%s/%s/%s/%s' % (self.resultsDir, expID.value, subjectID.value, file.value)
+        fullNameBasis = '%s/%s/%s/%s' % (self.resultsDir, self.expID_M.value, self.subjectID_M.value, self.file_M.value)
 
         # Builds matplotlib colors for DLC markers
         keyPltColors = {}
@@ -780,7 +759,7 @@ class Viewer:
 # GUI for tracking
 class ViewerUI(QWidget):
 
-    def __init__(self, log, resultsDir, resLogFile):
+    def __init__(self, log, resultsDir, resLogFile, expID_M, subjectID_M, file_M):
         """Constructor"""
 
         # Log object
@@ -788,6 +767,9 @@ class ViewerUI(QWidget):
         self.log.LogText(1, 'ViewerUI() called')
         self.resLogFile = resLogFile
         self.resultsDir = resultsDir
+        self.expID_M = expID_M
+        self.subjectID_M = subjectID_M
+        self.file_M = file_M
 
         super().__init__()
 
@@ -805,13 +787,17 @@ class ViewerUI(QWidget):
         self.ControllerUI(posX=10, posY=prevY + 15)
 
         # Camera return visual
-        self.panel = QLabel(self)
+        # self.panel = QLabel(self)
 
         # General aspect of the window
         self.setFixedSize(260, 640)
         self.move(10, 10)
         self.setWindowTitle('VR4Nemo results viewer')
         self.show()
+
+        self.log.LogText(1, 'ViewerUI launched')
+        time.sleep(1)
+
 
     def ViewerSettingsUI(self, posX, posY):
 
@@ -877,6 +863,7 @@ class ViewerUI(QWidget):
         self.saveVideosChkbox.clicked.connect(self.SaveVideos)
         posY += 35
 
+        self.log.LogText(2, 'ViewerUI settings')
 
         return posY
 
@@ -950,6 +937,8 @@ class ViewerUI(QWidget):
         if self.resLogFile != '':
             self.resLogFileBtn.setEnabled(False)
             self.LoadResLogFile(self.resLogFile)
+
+        self.log.LogText(2, 'ViewerUI select experiment file')
 
         return posY
 
@@ -1035,18 +1024,9 @@ class ViewerUI(QWidget):
             return
 
         # And store expID, subjectID and file in the viewer properties
-        expID.value = self.resLogSubj[ind][0]
-        # if 'clowns' in expID.value.lower():
-        #     species.value = 'Anemonefish'
-        # elif 'maninis' in expID.value.lower():
-        #     species.value = 'Surgeonfish'
-        # elif 'dascyllus' in expID.value.lower():
-        #     species.value = 'Damselfish'
-        # elif 'aruanus' in expID.value.lower():
-        #     species.value = 'Aruanus'
-
-        subjectID.value = self.resLogSubj[ind][1]
-        file.value = self.resLogSubj[ind][4]
+        self.expID_M.value = self.resLogSubj[ind][0]
+        self.subjectID_M.value = self.resLogSubj[ind][1]
+        self.file_M.value = self.resLogSubj[ind][4]
 
         # Updates widgets status
         self.startBtn.setEnabled(True)
@@ -1135,6 +1115,8 @@ class ViewerUI(QWidget):
         # self.sliderLblR.setStyleSheet("QLabel { font-weight: bold; }")
         self.sliderLblR.setVisible(False)
         posY += 45
+
+        self.log.LogText(2, 'ViewerUI controller')
 
         return posY
 
@@ -1273,7 +1255,6 @@ class ViewerUI(QWidget):
         self.log.LogText(2, 'ViewerUI: Quitting SliderUpdateCursor() thread')
 
 
-
     def closeEvent(self, event):
 
         self.log.LogText(2, 'ViewerUI: Sending stop and quit commands to Viewer')
@@ -1294,7 +1275,7 @@ class Log:
     def __init__(self, logLevel=int, showTime=True, __output=''):
         """Use output='' for console writing"""
 
-        self.__lock = threading.Lock()
+        # self.__lock = threading.Lock()
         self.logLevel = logLevel
         self.showTime = showTime
         if showTime:
@@ -1308,7 +1289,7 @@ class Log:
 
     def __del__(self):  # Called when destroying object
 
-        del self.__lock
+        # del self.__lock
         if self.__outToFile:
             sys.stdout.flush()
             sys.stdout = self.__stdoutCopy
@@ -1316,13 +1297,13 @@ class Log:
     def LogText(self, level, text):
 
         if self.logLevel >= level:
-            self.__lock.acquire()
+            # self.__lock.acquire()
             if self.showTime:
                 t = float(time.time_ns() - self.startTime) / 1E9
                 print('%10.6f\t' % t + '  ' * (level - 1) + text)
             else:
                 print('  ' * (level - 1) + text)
-            self.__lock.release()
+            # self.__lock.release()
 
 
 class BlitManager:

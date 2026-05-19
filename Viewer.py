@@ -31,6 +31,8 @@ import re
 import csv
 import numpy as np
 import cv2
+import matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
@@ -548,13 +550,16 @@ class Viewer:
         blitList = []
         scPlots = {}        # Scatter plots (positions and trail)
         qvPlots = {}        # Quiver plots (vectors)
+        axPlots = {}        # Axes references for 3D quiver recreation
+        has3D = any(len(pv) == 6 for pv in plotViews)
         for pvi, pv in enumerate(plotViews):
             if len(pv) == 6:        # 3D plot
                 xs, x, ys, y, zs, z = pv
                 ax = fig.add_subplot(spList[pvi], projection='3d')
-                scPlots[pv] = ax.scatter(0, 0, 0, c=0, s=0.2, marker='o', animated=True)
+                axPlots[pv] = ax
+                scPlots[pv] = ax.scatter(0, 0, 0, c=0, s=0.2, marker='o')
                 if showTrack.value:
-                    qvPlots[pv] = ax.quiver([0, 0, 0], [0, 0, 0], color=['r', 'g'])       # To draw vectors
+                    qvPlots[pv] = ax.quiver([0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], color=['r', 'g'])
                 ax.set_zlabel(z.upper())
                 ax.set_zlim(lim[z])
                 ax.set_zticks(ticks[z])
@@ -580,19 +585,23 @@ class Viewer:
             if ys == '-':
                 ax.invert_yaxis()
             ax.grid(linestyle='--', linewidth=0.75)
-            blitList.append(scPlots[pv])
-            if showTrack.value:
-                qvPlots[pv].angles = 'xy'
-                qvPlots[pv].scale_units = 'xy'
-                qvPlots[pv].scale = 1
-                qvPlots[pv].width = 0.004
-                qvPlots[pv].headlength = 5
-                blitList.append(qvPlots[pv])
+            if len(pv) == 4:    # Blitting only works for 2D axes
+                blitList.append(scPlots[pv])
+                if showTrack.value:
+                    qvPlots[pv].angles = 'xy'
+                    qvPlots[pv].scale_units = 'xy'
+                    qvPlots[pv].scale = 1
+                    qvPlots[pv].width = 0.004
+                    qvPlots[pv].headlength = 5
+                    blitList.append(qvPlots[pv])
 
-        # Set window position
-        mngr = plt.get_current_fig_manager()
-        _, _, winWidth, winHeight = mngr.window.geometry().getRect()
-        mngr.window.setGeometry(350, 10, winHeight, winWidth)
+        # Set window position (Qt backend only)
+        try:
+            mngr = plt.get_current_fig_manager()
+            _, _, winWidth, winHeight = mngr.window.geometry().getRect()
+            mngr.window.setGeometry(350, 10, winHeight, winWidth)
+        except AttributeError:
+            pass
 
         t0 = time.time_ns()     # Initial time (for playback speed)
         imgIndex.value = 0
@@ -612,8 +621,9 @@ class Viewer:
             if not playStarted:
                 while not play.value: pass
 
-                # Blit manager
-                bm = BlitManager(fig.canvas, blitList)
+                # Blit manager (only for 2D — 3D axes do not support blitting)
+                if not has3D:
+                    bm = BlitManager(fig.canvas, blitList)
                 plt.show(block=False)
                 plt.pause(.1)
 
@@ -723,9 +733,21 @@ class Viewer:
             for pv in plotViews:
                 if len(pv) == 6:  # 3D plot
                     _, x, _, y, _, z = pv
-                    # scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
-                    # scPlots[pv].set_color(pos['c'])
-                    # scPlots[pv].set_sizes(pos['r'])
+                    scPlots[pv]._offsets3d = (pos[x], pos[y], pos[z])
+                    if len(pos['c']) > 0:
+                        scPlots[pv].set_facecolors(pos['c'])
+                    scPlots[pv].set_sizes(pos['r'])
+                    if showTrack.value and len(pos[x]) > 0:
+                        qvPlots[pv].remove()
+                        qvPlots[pv] = axPlots[pv].quiver(
+                            [pos[x][posInd], pos[x][posInd]],
+                            [pos[y][posInd], pos[y][posInd]],
+                            [pos[z][posInd], pos[z][posInd]],
+                            [vel[x], gazeDir[x]],
+                            [vel[y], gazeDir[y]],
+                            [vel[z], gazeDir[z]],
+                            color=['r', 'g']
+                        )
                 else:  # 2D plot
                     _, x, _, y = pv
                     scPlots[pv].set_offsets(list(zip(pos[x], pos[y])))
@@ -734,11 +756,11 @@ class Viewer:
                     if showTrack.value:
                         qvPlots[pv].set_offsets([pos[x][posInd], pos[y][posInd]])
                         qvPlots[pv].set_UVC(U=[vel[x], gazeDir[x]], V=[vel[y], gazeDir[y]])
-                        # if self.showVelocity:
-                        #     qvPlots[pv].set_UVC(U=[vel[x]], V=[vel[y]])
-                        # if self.showGazeDir:
-                        #     qvPlots[pv].set_UVC(U=[gazeDir[x]], V=[gazeDir[y]])
-            bm.update()
+            if has3D:
+                fig.canvas.draw()
+                fig.canvas.flush_events()
+            else:
+                bm.update()
 
             # Update video output recording
             if saveVideos.value:
@@ -895,8 +917,7 @@ class ViewerUI(QWidget):
         self.viewModeLbl.setGeometry(posX + 20, posY, 100, 30)
         self.viewModeCombo = QComboBox(self)
         self.viewModeCombo.setGeometry(posX + 120, posY, 90, 30)
-        # self.viewModeCombo.addItems(['2D videos', '3D plots'])
-        self.viewModeCombo.addItems(['2D videos'])
+        self.viewModeCombo.addItems(['2D videos', '3D plots'])
         self.viewModeCombo.setEnabled(True)
         self.viewModeCombo.setCurrentIndex(viewMode.value - 2)
         self.viewModeCombo.currentIndexChanged.connect(self.ViewMode)

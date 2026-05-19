@@ -38,18 +38,7 @@ from ctypes import c_wchar_p
 
 
 # DLC markers variables
-keyColorsDict = {}
-keyColorsDict['Anemonefish'] = {'Nose': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'StripeFront': (255, 0, 66), 'StripeBack': (255, 0, 122),
-           'FinL': (0, 180, 0), 'FinR': (0, 0, 180), 'TailTip': (255, 0, 198)}     # For Clownfish DLC model
-keyColorsDict['Surgeonfish'] = {'Mouth': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'Stripe1': (255, 0, 33), 'Stripe2': (255, 0, 66), 'Stripe3': (255, 0, 99),
-            'Stripe4': (255, 0, 132), 'Stripe5': (255, 0, 165), 'Tail': (255, 0, 198)}       # For Maninis DLC model
-keyColorsDict['Aruanus'] = {'Mouth': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'Stripe1': (255, 0, 50), 'Stripe2': (255, 0, 100),
-            'Stripe3': (255, 0, 150), 'Tail': (255, 0, 200)}     # For Dascyllys_humbug DLC model
-keyColorsDict['Damselfish'] = {'Nose': (255, 0, 0), 'SpotHead': (255, 0, 99), 'SpotR': (0, 255, 0), 'SpotL': (0, 0, 255),
-            'FinL': (0, 180, 0), 'FinR': (0, 0, 180), 'TailTip': (255, 0, 198)}     # For Dascyllys_3Spots DLC model
-keyColorsDict['Cod'] = {'Snout': (255, 0, 0), 'EyeR': (0, 255, 0), 'EyeL': (0, 0, 255), 'FinL': (0, 160, 0), 'FinTipL': (0, 220, 0),
-            'FinR': (0, 0, 160), 'FinTipR': (0, 0, 220), 'FinFront': (255, 0, 40), 'FinMiddle': (255, 0, 80), 'FinBack': (255, 0, 120),
-            'Tail': (255, 0, 160), 'TailTip': (255, 0, 200)}     # For Cod DLC model
+# keyNames and keyColors are loaded from 'Settings/Color settings - <speciesName>.txt'
 keyRadius = 3        # Maximal radius size of the markers for monitoring (when inference p=1)
 cyclopRadius = 5    # Maximal radius size of cyclop for monitoring (when inference p=1)
 cyclopColor = 0     # Detection or cyclop marker center color (white)
@@ -110,6 +99,7 @@ class Viewer:
 
         # Load settings
         self.LoadSettingsFile('Settings.txt')
+        self.LoadColorSettings(self.speciesName)
 
         # Initialize process shared variables
         viewMode.value = self.viewMode
@@ -205,9 +195,9 @@ class Viewer:
         playStarted = False
         stopPlayer.value = False
 
-        # Get keyColors and keyNames
-        keyColors = keyColorsDict[species.value]
-        keyNames = keyColorsDict[species.value].keys()
+        # Get keyColors and keyNames from settings (loaded at startup)
+        keyColors = dict(zip(self.keyNames, self.keyColors))
+        keyNames = self.keyNames
 
         # Full path with filename basis — use runtime resultsDir (from selected tsv file)
         # rather than self.resultsDir which may be the Settings.txt default (Linux path).
@@ -801,6 +791,19 @@ class Viewer:
 
         # Updates log level
         self.log.logLevel = self.logLevel
+
+    def LoadColorSettings(self, speciesName):
+        """Loads keyNames and keyColors from 'Color settings - <speciesName>.txt'"""
+
+        fname = os.path.join('Settings', 'Color settings - %s.txt' % speciesName)
+        if not os.path.isfile(fname):
+            self.log.LogText(1, 'LoadColorSettings: Error: could not find \'%s\'' % fname)
+            self.keyNames = []
+            self.keyColors = []
+            return
+
+        self.LoadSettingsFile('Color settings - %s.txt' % speciesName)
+        self.log.LogText(2, 'Color settings loaded for species \'%s\'' % speciesName)
 
 
 # Module-level function used as the multiprocessing target for the GUI process.

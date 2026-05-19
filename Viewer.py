@@ -63,6 +63,7 @@ nFrames = mp.Value('L', 0)         # Number of frames in video or results files
 framerate = mp.Value('I', 0)       # Framerate of videos or results files
 saveVideos = mp.Value('B', 0)      # Save 2D videos with overlay or 3D plots when True
 sendPos3D = mp.Value('B', 0)       # Stream 3D pos to rendering
+plotView3D = mp.Value('B', 0)      # 3D view: 0=XY, 1=YZ, 2=XZ, 3=XYZ
 IP = {'Tracking': '192.168.0.2', 'Rendering': '192.168.0.1'}
 UDPserverRendering = (IP['Rendering'], 50771)
 
@@ -129,7 +130,7 @@ class Viewer:
                   # mp.Value shared flags
                   viewMode, showDLC, showTrack, trailFrames, useCyclop,
                   speed, startPlayer, stopPlayer, quit, play,
-                  imgIndex, nFrames, framerate, saveVideos, sendPos3D,
+                  imgIndex, nFrames, framerate, saveVideos, sendPos3D, plotView3D,
                   # mp.Manager shared strings
                   expID, subjectID, file, species, resultsDir_shared))
         self.ViewerUIproc.start()
@@ -488,8 +489,11 @@ class Viewer:
         cv2.destroyAllWindows()
 
 
-    def Plot3DPlayer(self, plotViews=['-x+y']):  # ['-y-x', '-x+z', '-y+z']
+    def Plot3DPlayer(self):
         """Starts 3D plot player with tracking and DLC results (THREAD)"""
+
+        _view_map = {0: ['-x+y'], 1: ['-y+z'], 2: ['-x+z'], 3: ['-x+y+z']}
+        plotViews = _view_map.get(plotView3D.value, ['-x+y'])
 
         self.log.LogText(1, 'Plot3DPlayer() called')
 
@@ -557,7 +561,7 @@ class Viewer:
                 xs, x, ys, y, zs, z = pv
                 ax = fig.add_subplot(spList[pvi], projection='3d')
                 axPlots[pv] = ax
-                scPlots[pv] = ax.scatter(0, 0, 0, c=0, s=0.2, marker='o')
+                scPlots[pv] = ax.scatter(0, 0, 0, color='k', s=0.2, marker='o')
                 if showTrack.value:
                     qvPlots[pv] = ax.quiver([0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], color=['r', 'g'])
                 ax.set_zlabel(z.upper())
@@ -599,7 +603,7 @@ class Viewer:
         try:
             mngr = plt.get_current_fig_manager()
             _, _, winWidth, winHeight = mngr.window.geometry().getRect()
-            mngr.window.setGeometry(350, 10, winHeight, winWidth)
+            mngr.window.setGeometry(350, 60, winHeight, winWidth)
         except AttributeError:
             pass
 
@@ -733,10 +737,14 @@ class Viewer:
             for pv in plotViews:
                 if len(pv) == 6:  # 3D plot
                     _, x, _, y, _, z = pv
-                    scPlots[pv]._offsets3d = (pos[x], pos[y], pos[z])
+                    scPlots[pv]._offsets3d = (np.array(pos[x]), np.array(pos[y]), np.array(pos[z]))
                     if len(pos['c']) > 0:
-                        scPlots[pv].set_facecolors(pos['c'])
-                    scPlots[pv].set_sizes(pos['r'])
+                        # Must set _facecolors3d/_edgecolors3d: do_3d_projection() reads these, not _facecolors
+                        colors_rgba = np.array([[*c, 1.0] for c in pos['c']], dtype=float)
+                        scPlots[pv]._facecolors3d = colors_rgba
+                        scPlots[pv]._edgecolors3d = colors_rgba
+                    # Must set _sizes3d: do_3d_projection() reads this, not _sizes
+                    scPlots[pv]._sizes3d = np.array(pos['r'])
                     if showTrack.value and len(pos[x]) > 0:
                         qvPlots[pv].remove()
                         qvPlots[pv] = axPlots[pv].quiver(
@@ -835,7 +843,7 @@ class Viewer:
 def _start_viewer_ui(logLevel, resultsDir, resLogFile,
                      _viewMode, _showDLC, _showTrack, _trailFrames, _useCyclop,
                      _speed, _startPlayer, _stopPlayer, _quit, _play,
-                     _imgIndex, _nFrames, _framerate, _saveVideos, _sendPos3D,
+                     _imgIndex, _nFrames, _framerate, _saveVideos, _sendPos3D, _plotView3D,
                      _expID, _subjectID, _file, _species, _resultsDir_shared):
     import sys as _sys
     # Inject shared variables into this module's global namespace so all
@@ -856,6 +864,7 @@ def _start_viewer_ui(logLevel, resultsDir, resLogFile,
     g['framerate']         = _framerate
     g['saveVideos']        = _saveVideos
     g['sendPos3D']         = _sendPos3D
+    g['plotView3D']        = _plotView3D
     g['expID']             = _expID
     g['subjectID']         = _subjectID
     g['file']              = _file
@@ -899,7 +908,7 @@ class ViewerUI(QWidget):
         self.panel = QLabel(self)
 
         # General aspect of the window
-        self.setFixedSize(260, 640)
+        self.setFixedSize(260, 680)
         self.move(10, 10)
         self.setWindowTitle('VR4Nemo results viewer')
         self.show()
@@ -921,6 +930,18 @@ class ViewerUI(QWidget):
         self.viewModeCombo.setEnabled(True)
         self.viewModeCombo.setCurrentIndex(viewMode.value - 2)
         self.viewModeCombo.currentIndexChanged.connect(self.ViewMode)
+        posY += 40
+
+        # 3D view axis selection (visible only in 3D mode)
+        self.plot3DViewLbl = QLabel('3D view', self)
+        self.plot3DViewLbl.setGeometry(posX + 20, posY, 100, 30)
+        self.plot3DViewCombo = QComboBox(self)
+        self.plot3DViewCombo.setGeometry(posX + 120, posY, 90, 30)
+        self.plot3DViewCombo.addItems(['XY', 'YZ', 'XZ', 'XYZ'])
+        self.plot3DViewCombo.setCurrentIndex(plotView3D.value)
+        self.plot3DViewCombo.currentIndexChanged.connect(self.PlotView3D)
+        self.plot3DViewLbl.setVisible(viewMode.value == 3)
+        self.plot3DViewCombo.setVisible(viewMode.value == 3)
         posY += 40
 
         # Show DeepLabCut
@@ -974,7 +995,15 @@ class ViewerUI(QWidget):
     def ViewMode(self):
 
         viewMode.value = 2 if self.viewModeCombo.currentText() == '2D videos' else 3
+        is3D = viewMode.value == 3
+        self.plot3DViewLbl.setVisible(is3D)
+        self.plot3DViewCombo.setVisible(is3D)
         self.log.LogText(2, 'ViewerUI: viewMode=%d' % viewMode.value)
+
+    def PlotView3D(self):
+
+        plotView3D.value = self.plot3DViewCombo.currentIndex()
+        self.log.LogText(2, 'ViewerUI: plotView3D=%d' % plotView3D.value)
 
     def TrailSize(self):
 
@@ -1246,6 +1275,7 @@ class ViewerUI(QWidget):
         self.startBtn.setEnabled(False)
         self.stopBtn.setEnabled(True)
         self.viewModeCombo.setEnabled(False)
+        self.plot3DViewCombo.setEnabled(False)
         self.playPauseBtn.setEnabled(True)
 
         # Slider
@@ -1275,6 +1305,7 @@ class ViewerUI(QWidget):
         self.playPauseBtn.setChecked(False)
         self.playPauseBtn.setText('Play')
         self.viewModeCombo.setEnabled(True)
+        self.plot3DViewCombo.setEnabled(viewMode.value == 3)
         self.resLogFileBtn.setEnabled(True)
         self.subjCombo.setEnabled(True)
         self.trialCombo.setEnabled(True)

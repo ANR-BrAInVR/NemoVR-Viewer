@@ -98,12 +98,12 @@ class Viewer:
         if self.s.expID != '':
             self.expID.value = self.s.expID
             self.resLogFile = os.path.join(self.s.resultsDir, self.s.expID, self.s.expID + '_files.tsv')
-            # was self.resultsDir + '/' + self.expID + '/' + self.expID + '_files.tsv'
+            # was self.s.resultsDir + '/' + self.expID + '/' + self.expID + '_files.tsv'
 
         # print('trailFrames: %d' % self.trailFrames.value)
 
         # Starts GUI
-        self.ViewerUIproc = mp.Process(target=StartViewerUI, args=(self,))
+        self.ViewerUIproc = mp.Process(target=self.StartViewerUI)
         self.ViewerUIproc.start()
         self.log.LogText(2, 'Viewer: GUI process started')
 
@@ -141,7 +141,7 @@ class Viewer:
         self.log.LogText(1, 'Viewer destructor called')
 
         # Kill ViewerUI if still there
-        self.ViewerUIproc.kill()
+        # self.ViewerUIproc.kill()
 
         # Close openCV windows and plot if any
         cv2.destroyAllWindows()
@@ -162,10 +162,10 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        fullNameBasis = '%s/%s/%s/%s' % (self.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
+        fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Video variables
-        camCount = len(self.camList)        # Number of cameras
+        camCount = len(self.s.camList)        # Number of cameras
         videos = [None] * camCount          # Video of each camera
         videoNFrames = [0] * camCount       # Number of frames in each video
         Ymin = [0] * camCount
@@ -175,7 +175,7 @@ class Viewer:
 
         # Opens videos
         for camInd in range(camCount):
-            camNb = self.camList[camInd]
+            camNb = self.s.camList[camInd]
             videoFilename = fullNameBasis + '_cam%d.mp4' % camNb
             videos[camInd] = cv2.VideoCapture(videoFilename)
             if not videos[camNb].isOpened():
@@ -185,20 +185,20 @@ class Viewer:
             videoNFrames[camInd] = int(videos[camInd].get(cv2.CAP_PROP_FRAME_COUNT))
 
             # Prepare crop ranges (for MarmoVR these must be red at each frame from 2D results file)
-            Xmin[camNb] = self.cropULs[camNb][0]
-            Xmax[camNb] = self.cropULs[camNb][0] + self.cropSize[0]
-            Ymin[camNb] = self.cropULs[camNb][1]
-            Ymax[camNb] = self.cropULs[camNb][1] + self.cropSize[1]
+            Xmin[camNb] = self.s.cropULs[camNb][0]
+            Xmax[camNb] = self.s.cropULs[camNb][0] + self.s.cropSize[0]
+            Ymin[camNb] = self.s.cropULs[camNb][1]
+            Ymax[camNb] = self.s.cropULs[camNb][1] + self.s.cropSize[1]
 
         # Prepares target panel
         imgWidth = int(videos[0].get(cv2.CAP_PROP_FRAME_WIDTH))
         imgHeight = int(videos[0].get(cv2.CAP_PROP_FRAME_HEIGHT))
-        resize = self.imgMode == 'full'
+        resize = self.s.imgMode == 'full'
         if resize:
             imgMonitDim = [imgHeight // 2, imgWidth // 2, 3]
         else:
-            imgMonitDim = [self.cropSize[1], self.cropSize[0], 3]
-        if abs(self.rotateCamList[0]) != 0:
+            imgMonitDim = [self.s.cropSize[1], self.s.cropSize[0], 3]
+        if abs(self.s.rotateCamList[0]) != 0:
             imgMonitDim[0], imgMonitDim[1] = imgMonitDim[1], imgMonitDim[0]         # Swap dimensions (for rotations)
         panelDim = [imgMonitDim[0], imgMonitDim[1]*2, 3]
         imgPanel = np.zeros(panelDim, 'uint8')
@@ -284,7 +284,7 @@ class Viewer:
             if self.imgIndex.value != fInd + 1:
                 fInd = self.imgIndex.value
                 for camInd in range(camCount):
-                    camNb = self.camList[camInd]
+                    camNb = self.s.camList[camInd]
                     videos[camNb].set(cv2.CAP_PROP_POS_FRAMES, fInd)
                 # time.sleep(0.05)
                 self.log.LogText(3, 'VideoPlayer: imgIndex set to %d' % fInd)
@@ -294,7 +294,7 @@ class Viewer:
 
             # Displays videos with 2D data overlayer
             for camInd in range(camCount):
-                camNb = self.camList[camInd]
+                camNb = self.s.camList[camInd]
 
                 # Get next image in the desired format
                 ret, img = videos[camNb].read()
@@ -316,7 +316,7 @@ class Viewer:
                             if resize:
                                 xPos, yPos = res2D['pos(Cyclop)_cam%d' % camNb][fIndTrail].astype(int)
                             else:
-                                xPos, yPos = res2D['pos(Cyclop)_cam%d' % camNb][fIndTrail].astype(int) - self.cropULs[camNb]
+                                xPos, yPos = res2D['pos(Cyclop)_cam%d' % camNb][fIndTrail].astype(int) - self.s.cropULs[camNb]
                             cKey = int(255 * (fInd - fIndTrail) / self.trailFrames.value)
                             rKey = int(keyRadius * 1.12*np.sqrt(pPos)) if self.s.sizeToProba else int(keyRadius)
                             img = cv2.circle(img, (xPos, yPos), rKey, [cKey] * 3, thickness=cv2.FILLED)
@@ -330,7 +330,7 @@ class Viewer:
                         if resize:
                             xPos, yPos = res2D['pos(Cyclop)_cam%d' % camNb][fInd].astype(int)
                         else:
-                            xPos, yPos = res2D['pos(Cyclop)_cam%d' % camNb][fInd].astype(int) - self.cropULs[camNb]
+                            xPos, yPos = res2D['pos(Cyclop)_cam%d' % camNb][fInd].astype(int) - self.s.cropULs[camNb]
                         rKeyExt = int(cyclopRadius * 1.12*np.sqrt(pPos)) if self.s.sizeToProba else int(cyclopRadius)
                         img = cv2.circle(img, (xPos, yPos), rKeyExt, [255-cyclopColor] * 3, thickness=cv2.FILLED)
                         rKeyInt = int(keyRadius * 1.12*np.sqrt(pPos)) if self.s.sizeToProba else int(keyRadius)
@@ -343,7 +343,7 @@ class Viewer:
                                 if resize:
                                     xPos, yPos = res2D['pos(%d)_cam%d' % (fishIndex, camNb)][fIndTrail].astype(int)
                                 else:
-                                    xPos, yPos = res2D['pos(%d)_cam%d' % (fishIndex, camNb)][fIndTrail].astype(int) - self.cropULs[camNb]
+                                    xPos, yPos = res2D['pos(%d)_cam%d' % (fishIndex, camNb)][fIndTrail].astype(int) - self.s.cropULs[camNb]
                                 cKey = int(255 * (fInd - fIndTrail) / self.trailFrames.value)
                                 img = cv2.circle(img, (xPos, yPos), int(keyRadius), [cKey] * 3, thickness=cv2.FILLED)
 
@@ -355,7 +355,7 @@ class Viewer:
                             if resize:
                                 xPos, yPos = res2D['pos(%d)_cam%d' % (fishIndex, camNb)][fInd].astype(int)
                             else:
-                                xPos, yPos = res2D['pos(%d)_cam%d' % (fishIndex, camNb)][fInd].astype(int) - self.cropULs[camNb]
+                                xPos, yPos = res2D['pos(%d)_cam%d' % (fishIndex, camNb)][fInd].astype(int) - self.s.cropULs[camNb]
                             img = cv2.circle(img, (xPos, yPos), int(cyclopRadius), [255-cyclopColor]*3, thickness=cv2.FILLED)
                             img = cv2.circle(img, (xPos, yPos), int(keyRadius), [cyclopColor]*3, thickness=cv2.FILLED)
 
@@ -367,8 +367,8 @@ class Viewer:
                         if resize:
                             xKey, yKey = res2D['pos(%s)_cam%d' % (keyName, camNb)][fInd].astype(int)
                         else:
-                            xKey, yKey = res2D['pos(%s)_cam%d' % (keyName, camNb)][fInd].astype(int) - self.cropULs[camNb]
-                        rKey = int(keyRadius * 1.12*np.sqrt(res2D['proba(%s)_cam%d' % (keyName, camNb)][fInd])) if self.sizeToProba else int(keyRadius)
+                            xKey, yKey = res2D['pos(%s)_cam%d' % (keyName, camNb)][fInd].astype(int) - self.s.cropULs[camNb]
+                        rKey = int(keyRadius * 1.12*np.sqrt(res2D['proba(%s)_cam%d' % (keyName, camNb)][fInd])) if self.s.sizeToProba else int(keyRadius)
                         # Draws circle on inferred markers (size depends on probability)
                         self.log.LogText(4, 'VideoPlayer: On cam%d, marker \'%s\' is drawn at (%d, %d) with r=%d' % (camNb, keyName, xKey, yKey, rKey))
                         img = cv2.circle(img, (xKey, yKey), rKey, self.s.keyColors[keyInd], thickness=cv2.FILLED)
@@ -378,11 +378,11 @@ class Viewer:
                     img = cv2.resize(img, (imgWidth // 2, imgHeight // 2))
 
                 # Rotate image to align monitoring with setup
-                if self.rotateCamList[camNb] == 90:
+                if self.s.rotateCamList[camNb] == 90:
                     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-                elif self.rotateCamList[camNb] == -90:
+                elif self.s.rotateCamList[camNb] == -90:
                     img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                elif self.rotateCamList[camNb] == 180:
+                elif self.s.rotateCamList[camNb] == 180:
                     img = cv2.rotate(img, cv2.ROTATE_180)
 
                 # Add infos in camera views
@@ -446,7 +446,7 @@ class Viewer:
         cv2.destroyAllWindows()
 
 
-    def Plot3DPlayer(self, plotViews=['-x+y']):     # ['-y-x', '-x+z', '-y+z']
+    def Plot3DPlayer(self, plotViews=['-x+y']):     # ['-x+y', '-y-x', '-x+z', '-y+z']
         """Starts 3D plot player with tracking and DLC results (THREAD)"""
 
         self.log.LogText(1, 'Plot3DPlayer() called')
@@ -457,15 +457,15 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        fullNameBasis = '%s/%s/%s/%s' % (self.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
+        fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Builds matplotlib colors for DLC markers
         keyPltColors = {}
-        for keyInd, keyName in enumerate(self.keyNames):
-            keyPltColors[keyName] = (self.keyColors[keyInd][2]/255, self.keyColors[keyInd][1]/255, self.keyColors[keyInd][0]/255)
+        for keyInd, keyName in enumerate(self.s.keyNames):
+            keyPltColors[keyName] = (self.s.keyColors[keyInd][2]/255, self.s.keyColors[keyInd][1]/255, self.s.keyColors[keyInd][0]/255)
 
         # Loads 3D results (triangulations)
-        filename = fullNameBasis + self.ext3D + '.npy'
+        filename = fullNameBasis + self.s.ext3D + '.npy'
         if not os.path.exists(filename):
             self.log.LogText(1, 'Plot3DPlayer: Error opening 3D results file \'%s\', quitting' % self.file.value)
             return -1
@@ -679,9 +679,9 @@ class Viewer:
             for pv in plotViews:
                 if len(pv) == 6:    # 3D plot
                     _, x, _, y, _, z = pv
-                    # scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
-                    # scPlots[pv].set_color(pos['c'])
-                    # scPlots[pv].set_sizes(pos['r'])
+                    scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
+                    scPlots[pv].set_color(pos['c'])
+                    scPlots[pv].set_sizes(pos['r'])
                 else:               # 2D plot
                     _, x, _, y = pv
                     scPlots[pv].set_offsets(list(zip(pos[x], pos[y])))
@@ -746,14 +746,13 @@ class Viewer:
         self.log.LogText(2, '"%s" loaded' % settingsName)
 
 
-def StartViewerUI(self):
+    def StartViewerUI(self):
 
-    log = Log(logLevel=2, showTime=True)
-    import sys as _sys
+        log = Log(logLevel=2, showTime=True)
 
-    myQtApp = QApplication(_sys.argv)
-    ViewerUI(log, self.s.resultsDir, self.resLogFile, self)
-    myQtApp.exec_()
+        myQtApp = QApplication(sys.argv)
+        ui = ViewerUI(log, self.s.resultsDir, self.resLogFile, self)
+        myQtApp.exec_()
 
 
 # GUI for tracking
@@ -789,8 +788,6 @@ class ViewerUI(QWidget):
         self.nFrames = self_viewer.nFrames
         self.framerate = self_viewer.framerate
 
-        # print('trailFrames in UI: %d' % self.trailFrames.value)
-
         super().__init__()
 
         # Playing speeds dictionary
@@ -802,10 +799,9 @@ class ViewerUI(QWidget):
         self.trackbarPos = 0
 
         # Load section UIs
-        self.DebugUI(posX=10, posY=15)
-        # prevY = self.ViewerSettingsUI(posX=10, posY=0)
-        # prevY = self.SelectExperimentFileUI(posX=10, posY=prevY + 15)
-        # self.ControllerUI(posX=10, posY=prevY + 15)
+        prevY = self.ViewerSettingsUI(posX=10, posY=0)
+        prevY = self.SelectExperimentFileUI(posX=10, posY=prevY + 15)
+        self.ControllerUI(posX=10, posY=prevY + 15)
 
         # Camera return visual
         self.panel = QLabel(self)
@@ -817,38 +813,14 @@ class ViewerUI(QWidget):
         self.show()
 
         self.log.LogText(1, 'ViewerUI launched')
-        # time.sleep(1)
 
-    def DebugUI(self, posX, posY):
-
-        # Section title
-        self.viewerSetLbl = QLabel('Settings', self)
-        self.viewerSetLbl.setGeometry(posX, posY, 150, 30)
-        self.viewerSetLbl.setStyleSheet("font-weight: bold")
-        posY += 40
-
-        # Player mode
-        self.viewModeLbl = QLabel('View mode', self)
-        self.viewModeLbl.setGeometry(posX + 20, posY, 100, 30)
-        self.viewModeCombo = QComboBox(self)
-        self.viewModeCombo.setGeometry(posX + 120, posY, 90, 30)
-        self.viewModeCombo.addItems(['2D videos', '3D plots'])
-        self.viewModeCombo.setEnabled(True)
-        self.viewModeCombo.setCurrentIndex(0)
-        # self.viewModeCombo.currentIndexChanged.connect(self.ViewMode)
-        posY += 40
-
-        # Show DeepLabCut
-        self.showDLCBtn = QPushButton('Show DLC', self)
-        self.showDLCBtn.setGeometry(posX, posY, 240, 30)
-        self.showDLCBtn.setCheckable(True)
-        self.showDLCBtn.setChecked(False)
-        # self.showDLCBtn.clicked.connect(self.ShowDLC)
-        posY += 35
-
-        self.log.LogText(2, 'DebugUI settings')
-
-        return posY
+        # Debug forcing player
+        # self.SliderThread = threading.Thread(target=self.SliderUpdateCursor, args=())
+        # self.expID.value = 'CP_FVAPV_clowns'
+        # self.subjectID.value = 'Clown1'
+        # self.file.value = 'Trial-Trial1_Cond-Sand_FV'
+        # self.StartPlayer()
+        # time.sleep(2)
 
     def ViewerSettingsUI(self, posX, posY):
 
@@ -1302,7 +1274,7 @@ class ViewerUI(QWidget):
                     self.slider.setValue(0)
                     break
 
-        self.StopPlayer()
+        # self.StopPlayer()     # Not needed ?
         self.log.LogText(2, 'ViewerUI: Quitting SliderUpdateCursor() thread')
 
 

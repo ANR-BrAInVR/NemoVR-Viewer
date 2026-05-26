@@ -446,7 +446,7 @@ class Viewer:
         cv2.destroyAllWindows()
 
 
-    def Plot3DPlayer(self, plotViews=['-x+y']):     # ['-x+y', '-y-x', '-x+z', '-y+z']
+    def Plot3DPlayer(self, plotViews=['-x+y', '-x+y+z']):     # ['-x+y', '-y-x', '-x+z', '-y+z']
         """Starts 3D plot player with tracking and DLC results (THREAD)"""
 
         self.log.LogText(1, 'Plot3DPlayer() called')
@@ -495,7 +495,7 @@ class Viewer:
             spList = [221, 222, 223, 224]
         fig = plt.figure(figsize=fSize)
         ticks = {}
-        ticks['x'] = ticks['y'] = list(range(-10, 11, 5))
+        ticks['x'] = ticks['y'] = list(np.arange(-10, 11, 5))
         ticks['z'] = list(range(0, 16, 5))
         lim = {}
         lim['x'] = lim['y'] = (-11, 11)
@@ -504,19 +504,24 @@ class Viewer:
         blitList = []
         scPlots = {}        # Scatter plots (positions and trail)
         qvPlots = {}        # Quiver plots (vectors)
+        ax3D = None
+        has3D = False
+        has2D = False
         for pvi, pv in enumerate(plotViews):
             if len(pv) == 6:        # 3D plot
+                has3D = True
                 xs, x, ys, y, zs, z = pv
-                ax = fig.add_subplot(spList[pvi], projection='3d')
-                scPlots[pv] = ax.scatter(0, 0, 0, c=0, s=0.2, marker='o', animated=True)
+                ax3D = ax = fig.add_subplot(spList[pvi], projection='3d')
+                scPlots[pv] = ax.scatter(0, 0, 0, c=0, s=0.2, marker='o')
                 if self.showTrack.value:
-                    qvPlots[pv] = ax.quiver([0, 0, 0], [0, 0, 0], color=['r', 'g'])       # To draw vectors
+                    qvPlots[pv] = ax.quiver([0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], color=['k', 'b'])   # To draw vectors
                 ax.set_zlabel(z.upper())
                 ax.set_zlim(lim[z])
                 ax.set_zticks(ticks[z])
                 if zs == '-':
                     ax.invert_zaxis()
             elif len(pv) == 4:      # 2D plot
+                has2D = True
                 xs, x, ys, y = pv
                 ax = fig.add_subplot(spList[pvi])
                 scPlots[pv] = ax.scatter(0, 0, c=0, s=0.2, marker='o', animated=True)
@@ -536,14 +541,15 @@ class Viewer:
             if ys == '-':
                 ax.invert_yaxis()
             ax.grid(linestyle='--', linewidth=0.75)
-            blitList.append(scPlots[pv])
-            if self.showTrack.value:
-                qvPlots[pv].angles = 'xy'
-                qvPlots[pv].scale_units = 'xy'
-                qvPlots[pv].scale = 1
-                qvPlots[pv].width = 0.004
-                qvPlots[pv].headlength = 5
-                blitList.append(qvPlots[pv])
+            if len(pv) == 4:  # Blitting only works for 2D axes
+                blitList.append(scPlots[pv])
+                if self.showTrack.value:
+                    qvPlots[pv].angles = 'xy'
+                    qvPlots[pv].scale_units = 'xy'
+                    qvPlots[pv].scale = 1
+                    qvPlots[pv].width = 0.004
+                    qvPlots[pv].headlength = 5
+                    blitList.append(qvPlots[pv])
 
         # Set window position
         mngr = plt.get_current_fig_manager()
@@ -568,8 +574,9 @@ class Viewer:
             if not playStarted:
                 while not self.play.value: pass
 
-                # Blit manager
-                bm = BlitManager(fig.canvas, blitList)
+                # Blit manager (for 2D plots only)
+                if has2D:
+                    bm = BlitManager(fig.canvas, blitList)
                 plt.show(block=False)
                 plt.pause(.1)
 
@@ -654,11 +661,11 @@ class Viewer:
 
                 # Draws heading and gazeDir vectors
                 posInd = len(pos['x']) - 1
-                if self.showVelocity:
+                if self.s.showVelocity:
                     vel['x'], vel['y'], vel['z'] = 0.5 * res3D['vel(Cyclop)'][fInd]
                 else:
                     vel['x'], vel['y'], vel['z'] = 0, 0, 0
-                if self.showGazeDir:
+                if self.s.showGazeDir:
                     gazeDir['x'], gazeDir['y'], gazeDir['z'] = 2 * res3D['gazeDir'][fInd]
                 else:
                     gazeDir['x'], gazeDir['y'], gazeDir['z'] = 0, 0, 0
@@ -667,7 +674,7 @@ class Viewer:
                 # Plot triangulated inferred DLC markers
                 for keyName in self.s.keyNames:
                     xKey, yKey, zKey = res3D['pos(%s)' % keyName][fInd]
-                    if xKey == -1 and yKey == -1 and zKey == -1: continue
+                    if (xKey, yKey, zKey) == (-1, -1, -1): continue
                     rKey = 1.0 * res3D['proba(%s)' % keyName][fInd]
                     pos['x'].append(xKey)
                     pos['y'].append(yKey)
@@ -679,9 +686,24 @@ class Viewer:
             for pv in plotViews:
                 if len(pv) == 6:    # 3D plot
                     _, x, _, y, _, z = pv
-                    scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
-                    scPlots[pv].set_color(pos['c'])
-                    scPlots[pv].set_sizes(pos['r'])
+                    # scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
+                    # scPlots[pv].set_color(pos['k'])
+                    # scPlots[pv].set_sizes(pos['b'])
+                    scPlots[pv]._offsets3d = (np.array(pos[x]), np.array(pos[y]), np.array(pos[z]))
+                    if len(pos['c']) > 0:
+                        # Must set _facecolors3d/_edgecolors3d: do_3d_projection() reads these, not _facecolors
+                        colors_rgba = np.array([[*c, 1.0] for c in pos['c']], dtype=float)
+                        scPlots[pv]._facecolors3d = colors_rgba
+                        scPlots[pv]._edgecolors3d = colors_rgba
+
+                    # Must set _sizes3d: do_3d_projection() reads this, not _sizes
+                    scPlots[pv]._sizes3d = np.array(pos['r'])
+
+                    if self.showTrack.value and len(pos[x]) > 0:
+                        qvPlots[pv].remove()
+                        qvPlots[pv] = ax3D.quiver([pos[x][posInd], pos[x][posInd]], [pos[y][posInd], pos[y][posInd]],
+                            [pos[z][posInd], pos[z][posInd]], [vel[x], gazeDir[x]], [vel[y], gazeDir[y]], [vel[z], gazeDir[z]],
+                            color=['k', 'b'])
                 else:               # 2D plot
                     _, x, _, y = pv
                     scPlots[pv].set_offsets(list(zip(pos[x], pos[y])))
@@ -690,11 +712,15 @@ class Viewer:
                     if self.showTrack.value:
                         qvPlots[pv].set_offsets([pos[x][posInd], pos[y][posInd]])
                         qvPlots[pv].set_UVC(U=[vel[x], gazeDir[x]], V=[vel[y], gazeDir[y]])
-                        # if self.showVelocity:
+                        # if self.s.showVelocity:
                         #     qvPlots[pv].set_UVC(U=[vel[x]], V=[vel[y]])
-                        # if self.showGazeDir:
+                        # if self.s.showGazeDir:
                         #     qvPlots[pv].set_UVC(U=[gazeDir[x]], V=[gazeDir[y]])
-            bm.update()
+            if has3D:
+                fig.canvas.draw()
+                fig.canvas.flush_events()
+            else:
+                bm.update()
 
             # Update video output recording
             if self.saveVideos.value:

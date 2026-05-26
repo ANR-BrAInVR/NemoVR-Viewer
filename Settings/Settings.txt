@@ -13,7 +13,7 @@ sendPos3D	False			# Bool: send 3D positions to Unreal based on detection or DLC 
 # Viewer settings
 viewMode	3				# int: viewer mode 2:'2D videos' or 3:'3D plots'
 showDLC		True			# bool: show DLC
-showTrack	False			# bool: show animal tracking
+showTrack	True			# bool: show animal tracking
 sizeToProba	True			# bool: size DLC markers with sqrt of inferred proba (by steps of 1 pixel)
 trailFrames	30				# int: number of frames shown for trail (from 1 no trail to 60 for a 2s trail)
 useCyclop	True			# bool: use 2D detection if True, else DLC inferred cyclop

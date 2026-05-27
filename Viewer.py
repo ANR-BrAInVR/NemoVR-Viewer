@@ -5,7 +5,9 @@ Created on Mon May 11 12:30:45 2022
 @authors: Manuel
 
 TODO:
-- Plot3D : faire marcher le blitmanager avec projection 3D
+- ajouter squelette
++ faire fonctionner sous windows (process spawned vs forked sous linux)
++ Plot3D : faire marcher le vrai plot 3D -x+y+z (sans le blitmanager car ça ne marche pas)
 + Plot3D : afficher sur le plot X, Y les points avec gazeDir, velocity (curvature, à faire ?)
 + lorsque la vitesse est x2 x4 ou x8 sauter 2 4 ou 8 frames (sinon on ne respecte pas la vitesse demandée)
 + debugger le slider pour qu'il n'y ait pas de décalage entre video et overlays
@@ -162,7 +164,8 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
+        # fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
+        fullNameBasis = os.path.join(self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Video variables
         camCount = len(self.s.camList)        # Number of cameras
@@ -457,7 +460,8 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
+        # fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
+        fullNameBasis = os.path.join(self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Builds matplotlib colors for DLC markers
         keyPltColors = {}
@@ -756,7 +760,8 @@ class Viewer:
     def LoadSettingsFile(self, settingsName, storeVariable='self'):
         """Loads specific settings to self or another object's attributes"""
 
-        fname = 'Settings/' + settingsName + '.txt'
+        # fname = 'Settings/' + settingsName + '.txt'
+        fname = os.path.join('Settings', settingsName + '.txt')
         if not os.path.isfile(fname):
             print('Error: could not find \'%s\' file' % settingsName)
             return
@@ -777,6 +782,8 @@ class Viewer:
         log = Log(logLevel=2, showTime=True)
 
         myQtApp = QApplication(sys.argv)
+
+        # Needs to be stored in variable (iu) so that it is not garbage collected and closed immediately
         ui = ViewerUI(log, self.s.resultsDir, self.resLogFile, self)
         myQtApp.exec_()
 

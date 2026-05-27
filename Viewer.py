@@ -164,7 +164,6 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        # fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
         fullNameBasis = os.path.join(self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Video variables
@@ -460,7 +459,6 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        # fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
         fullNameBasis = os.path.join(self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Builds matplotlib colors for DLC markers
@@ -504,7 +502,7 @@ class Viewer:
         lim = {}
         lim['x'] = lim['y'] = (-11, 11)
         lim['z'] = (-1, 16)
-        plt.subplots_adjust(left=0.05, top=0.98, bottom=0.05, right=0.98)
+        plt.subplots_adjust(left=0.05, top=0.98, bottom=0.1, right=0.96)
         blitList = []
         scPlots = {}        # Scatter plots (positions and trail)
         qvPlots = {}        # Quiver plots (vectors)
@@ -534,18 +532,23 @@ class Viewer:
             else:
                 self.log.LogText(2, 'Plot3DPlayer: could not interpret plot view pv=\'%s\', ignoring' % pv)
                 continue
+            # X axis settings
             ax.set_xlabel(x.upper())
             ax.set_xlim(lim[x])
             ax.set_xticks(ticks[x])
             if xs == '-':
                 ax.invert_xaxis()
-            ax.set_ylabel(y.upper(), labelpad=(-8 if y == 'y' else 0))
+            # Y axis settings
+            ax.set_ylabel(y.upper())
+            ax.set_ylabel(y.upper(), labelpad=(-8 if y == 'y' and len(pv) == 4 else 0))
             ax.set_ylim(lim[y])
             ax.set_yticks(ticks[y])
             if ys == '-':
                 ax.invert_yaxis()
+            # Grid
             ax.grid(linestyle='--', linewidth=0.75)
-            if len(pv) == 4:  # Blitting only works for 2D axes
+            # Blitting only works for 2D axes
+            if len(pv) == 4:
                 blitList.append(scPlots[pv])
                 if self.showTrack.value:
                     qvPlots[pv].angles = 'xy'
@@ -558,7 +561,7 @@ class Viewer:
         # Set window position
         mngr = plt.get_current_fig_manager()
         _, _, winWidth, winHeight = mngr.window.geometry().getRect()
-        mngr.window.setGeometry(350, 10, winHeight, winWidth)
+        mngr.window.setGeometry(self.s.xMonitWin, 40, winHeight, winWidth)
 
         t0 = time.time_ns()     # Initial time (for playback speed)
         self.imgIndex.value = 0

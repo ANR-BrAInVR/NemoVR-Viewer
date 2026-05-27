@@ -62,9 +62,8 @@ class Viewer:
         self.log = Log(logLevel=2, showTime=True)
         self.log.LogText(1, 'Viewer() called')
 
-        self.s = Settings()
-
         # Load settings
+        self.s = Settings()
         self.LoadSettingsFile('Settings', storeVariable='self.s')
         self.log.logLevel = self.s.logLevel             # Updates log level
 
@@ -253,7 +252,7 @@ class Viewer:
                 # Prepare window
                 windowName = 'Images %s' % ('(with DLC)' if self.showDLC.value else '')
                 cv2.namedWindow(windowName, cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_AUTOSIZE)
-                cv2.moveWindow(windowName, self.s.xMonitWin, 0)
+                cv2.moveWindow(windowName, self.s.xMonitWin, 20)
 
                 playStarted = True
                 self.log.LogText(2, 'VideoPlayer: Play received')
@@ -517,6 +516,7 @@ class Viewer:
                 scPlots[pv] = ax.scatter(0, 0, 0, c=0, s=0.2, marker='o')
                 if self.showTrack.value:
                     qvPlots[pv] = ax.quiver([0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], color=['k', 'b'])   # To draw vectors
+                # Z axis settings
                 ax.set_zlabel(z.upper())
                 ax.set_zlim(lim[z])
                 ax.set_zticks(ticks[z])
@@ -693,9 +693,6 @@ class Viewer:
             for pv in plotViews:
                 if len(pv) == 6:    # 3D plot
                     _, x, _, y, _, z = pv
-                    # scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
-                    # scPlots[pv].set_color(pos['k'])
-                    # scPlots[pv].set_sizes(pos['b'])
                     scPlots[pv]._offsets3d = (np.array(pos[x]), np.array(pos[y]), np.array(pos[z]))
                     if len(pos['c']) > 0:
                         # Must set _facecolors3d/_edgecolors3d: do_3d_projection() reads these, not _facecolors
@@ -849,14 +846,6 @@ class ViewerUI(QWidget):
         self.show()
 
         self.log.LogText(1, 'ViewerUI launched')
-
-        # Debug forcing player
-        # self.SliderThread = threading.Thread(target=self.SliderUpdateCursor, args=())
-        # self.expID.value = 'CP_FVAPV_clowns'
-        # self.subjectID.value = 'Clown1'
-        # self.file.value = 'Trial-Trial1_Cond-Sand_FV'
-        # self.StartPlayer()
-        # time.sleep(2)
 
     def ViewerSettingsUI(self, posX, posY):
 

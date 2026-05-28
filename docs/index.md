@@ -1,8 +1,4 @@
-# NemoVR-Viewer
 
-[Home](index.md) | [Installation](installation.md) | [Usage](usage.md) | [Settings](settings.md) | [Screenshots](screenshots.md) | [Videos](videos.md)
-
----
 
 Viewer for visualization of fish tracking experiments with synchronized multi-camera videos, 2D/3D tracking overlays and DeepLabCut pose estimation.
 

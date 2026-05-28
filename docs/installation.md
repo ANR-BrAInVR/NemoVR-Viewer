@@ -1,8 +1,4 @@
-# Installation
 
-[Home](index.md) | [Installation](installation.md) | [Usage](usage.md) | [Settings](settings.md) | [Screenshots](screenshots.md) | [Videos](videos.md)
-
----
 This page explains how to install and launch the NemoVR-Viewer application step by step.
 
 The goal is to help users who may not be familiar with Python or programming environments.

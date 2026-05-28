@@ -184,71 +184,16 @@ The viewer also displays:
 
 Default values can be changed in `Settings.txt`.
 
-## View mode
-
-Select visualization mode:
-
-* `2D videos` → synchronized camera videos with overlays
-* `3D plots` → reconstructed 3D trajectories
-
----
-
-## Show DLC
-
-Display DeepLabCut inferred markers.
-
----
-
-## Show Track
-
-Display tracking positions and trajectories.
-
----
-
-## Trail size (frames)
-
-Controls the length of the visible trajectory trail.
-
-Higher values display longer movement histories.
-
----
-
-## Use cyclop
-
-Uses inferred cyclop positions instead of raw detected tracking points.
-
----
-
-## Save video output
-
-Exports videos with overlays or 3D visualizations.
-
----
-
-## Play speed
-
-Available playback speeds:
-
-* x1/8
-* x1/4
-* x1/2
-* x1
-* x2
-* x4
-* x8
-
----
-
-## Slider
-
-Allows direct navigation through frames.
-
-Displays:
-
-* current frame
-* elapsed time
-* total duration
-* total frame count
+| GUI Setting           | Description                                                                                                                |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `View mode`           | Select visualization mode: `2D videos` for synchronized videos with overlays, or `3D plots` for reconstructed trajectories |
+| `Show DLC`            | Display DeepLabCut inferred markers                                                                                        |
+| `Show Track`          | Display tracking positions and trajectories                                                                                |
+| `Trail size (frames)` | Controls the length of the visible trajectory trail. Higher values display longer movement histories                       |
+| `Use cyclop`          | Use inferred cyclop positions instead of raw tracking detections                                                           |
+| `Save video output`   | Export videos with overlays or 3D visualizations                                                                           |
+| `Play speed`          | Playback speed selection: `x1/8`, `x1/4`, `x1/2`, `x1`, `x2`, `x4`, `x8`                                                   |
+| `Slider`              | Allows direct navigation through frames and displays current frame, elapsed time, total duration and total frame count     |
 
 ---
 

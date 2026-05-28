@@ -1,8 +1,3 @@
-# Usage
-
-[Home](index.md) | [Installation](installation.md) | [Usage](usage.md) | [Settings](settings.md) | [Screenshots](screenshots.md) | [Videos](videos.md)
-
----
 
 This page explains how to use NemoVR-Viewer after the installation has been completed.
 

@@ -2,9 +2,18 @@
 
 A Python-based viewer for fish tracking experiments. Displays synchronized multi-camera videos with overlaid 2D/3D tracking results and DeepLabCut (DLC) pose estimation markers.
 
-![NemoVR-Viewer screenshot](docs/assets/viewer_2dvideos.png)
+![NemoVR-Viewer screenshot](docs/assets/viewer_2dvideo.png)
 
 ---
+
+## Full Documentation
+
+The complete NemoVR-Viewer documentation is available here:
+
+[NemoVR-Viewer Documentation](https://anr-brainvr.github.io/NemoVR-Viewer/)
+
+---
+
 
 # Requirements
 

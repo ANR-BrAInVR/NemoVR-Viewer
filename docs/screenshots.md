@@ -1,5 +1,9 @@
 # Screenshots
 
+[Home](index.md) | [Installation](installation.md) | [Usage](usage.md) | [Settings](settings.md) | [Screenshots](screenshots.md) | [Videos](videos.md)
+
+---
+
 This page presents examples of the NemoVR-Viewer graphical interface and visualization modes.
 
 ---

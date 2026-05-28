@@ -1,5 +1,9 @@
 # Settings
 
+[Home](index.md) | [Installation](installation.md) | [Usage](usage.md) | [Settings](settings.md) | [Screenshots](screenshots.md) | [Videos](videos.md)
+
+---
+
 The NemoVR-Viewer behavior can be configured using the:
 
 ```text

@@ -62,9 +62,8 @@ class Viewer:
         self.log = Log(logLevel=2, showTime=True)
         self.log.LogText(1, 'Viewer() called')
 
-        self.s = Settings()
-
         # Load settings
+        self.s = Settings()
         self.LoadSettingsFile('Settings', storeVariable='self.s')
         self.log.logLevel = self.s.logLevel             # Updates log level
 
@@ -164,7 +163,6 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        # fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
         fullNameBasis = os.path.join(self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Video variables
@@ -254,7 +252,7 @@ class Viewer:
                 # Prepare window
                 windowName = 'Images %s' % ('(with DLC)' if self.showDLC.value else '')
                 cv2.namedWindow(windowName, cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_AUTOSIZE)
-                cv2.moveWindow(windowName, self.s.xMonitWin, 0)
+                cv2.moveWindow(windowName, self.s.xMonitWin, 20)
 
                 playStarted = True
                 self.log.LogText(2, 'VideoPlayer: Play received')
@@ -460,7 +458,6 @@ class Viewer:
         playStarted = False
 
         # Full path with filename basis
-        # fullNameBasis = '%s/%s/%s/%s' % (self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
         fullNameBasis = os.path.join(self.s.resultsDir, self.expID.value, self.subjectID.value, self.file.value)
 
         # Builds matplotlib colors for DLC markers
@@ -504,7 +501,7 @@ class Viewer:
         lim = {}
         lim['x'] = lim['y'] = (-11, 11)
         lim['z'] = (-1, 16)
-        plt.subplots_adjust(left=0.05, top=0.98, bottom=0.05, right=0.98)
+        plt.subplots_adjust(left=0.05, top=0.98, bottom=0.1, right=0.96)
         blitList = []
         scPlots = {}        # Scatter plots (positions and trail)
         qvPlots = {}        # Quiver plots (vectors)
@@ -519,6 +516,7 @@ class Viewer:
                 scPlots[pv] = ax.scatter(0, 0, 0, c=0, s=0.2, marker='o')
                 if self.showTrack.value:
                     qvPlots[pv] = ax.quiver([0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], color=['k', 'b'])   # To draw vectors
+                # Z axis settings
                 ax.set_zlabel(z.upper())
                 ax.set_zlim(lim[z])
                 ax.set_zticks(ticks[z])
@@ -534,18 +532,23 @@ class Viewer:
             else:
                 self.log.LogText(2, 'Plot3DPlayer: could not interpret plot view pv=\'%s\', ignoring' % pv)
                 continue
+            # X axis settings
             ax.set_xlabel(x.upper())
             ax.set_xlim(lim[x])
             ax.set_xticks(ticks[x])
             if xs == '-':
                 ax.invert_xaxis()
-            ax.set_ylabel(y.upper(), labelpad=(-8 if y == 'y' else 0))
+            # Y axis settings
+            ax.set_ylabel(y.upper())
+            ax.set_ylabel(y.upper(), labelpad=(-8 if y == 'y' and len(pv) == 4 else 0))
             ax.set_ylim(lim[y])
             ax.set_yticks(ticks[y])
             if ys == '-':
                 ax.invert_yaxis()
+            # Grid
             ax.grid(linestyle='--', linewidth=0.75)
-            if len(pv) == 4:  # Blitting only works for 2D axes
+            # Blitting only works for 2D axes
+            if len(pv) == 4:
                 blitList.append(scPlots[pv])
                 if self.showTrack.value:
                     qvPlots[pv].angles = 'xy'
@@ -558,7 +561,7 @@ class Viewer:
         # Set window position
         mngr = plt.get_current_fig_manager()
         _, _, winWidth, winHeight = mngr.window.geometry().getRect()
-        mngr.window.setGeometry(350, 10, winHeight, winWidth)
+        mngr.window.setGeometry(self.s.xMonitWin, 40, winHeight, winWidth)
 
         t0 = time.time_ns()     # Initial time (for playback speed)
         self.imgIndex.value = 0
@@ -690,9 +693,6 @@ class Viewer:
             for pv in plotViews:
                 if len(pv) == 6:    # 3D plot
                     _, x, _, y, _, z = pv
-                    # scPlots[pv].set_offsets(list(zip(pos[x], pos[y], pos[z])))
-                    # scPlots[pv].set_color(pos['k'])
-                    # scPlots[pv].set_sizes(pos['b'])
                     scPlots[pv]._offsets3d = (np.array(pos[x]), np.array(pos[y]), np.array(pos[z]))
                     if len(pos['c']) > 0:
                         # Must set _facecolors3d/_edgecolors3d: do_3d_projection() reads these, not _facecolors
@@ -846,14 +846,6 @@ class ViewerUI(QWidget):
         self.show()
 
         self.log.LogText(1, 'ViewerUI launched')
-
-        # Debug forcing player
-        # self.SliderThread = threading.Thread(target=self.SliderUpdateCursor, args=())
-        # self.expID.value = 'CP_FVAPV_clowns'
-        # self.subjectID.value = 'Clown1'
-        # self.file.value = 'Trial-Trial1_Cond-Sand_FV'
-        # self.StartPlayer()
-        # time.sleep(2)
 
     def ViewerSettingsUI(self, posX, posY):
 

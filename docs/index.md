@@ -6,7 +6,7 @@
 
 Viewer for visualization of fish tracking experiments with synchronized multi-camera videos, 2D/3D tracking overlays and DeepLabCut pose estimation.
 
-![Viewer](assets/viewer_screenshot.png)
+![Viewer](assets/viewer_2dvideo.png)
 
 ---
 

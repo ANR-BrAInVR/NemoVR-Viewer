@@ -289,7 +289,7 @@ The usage guide explains how to:
 
 See:
 
-```text id="qpn3ga"
+```text"
 Usage
 ```
 

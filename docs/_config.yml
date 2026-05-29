@@ -1,0 +1,10 @@
+title: NemoVR-Viewer
+description: Fish tracking visualization and DeepLabCut analysis
+theme: minima
+
+header_pages:
+  - installation.md
+  - usage.md
+  - settings.md
+  - screenshots.md
+  - videos.md

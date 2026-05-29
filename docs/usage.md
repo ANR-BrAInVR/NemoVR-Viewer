@@ -1,4 +1,8 @@
+---
+title: Usage
+---
 
+# Usage
 This page explains how to use NemoVR-Viewer after the installation has been completed.
 
 The viewer allows interactive visualization of tracking experiments, synchronized videos and DeepLabCut inference results.

@@ -1,4 +1,8 @@
+---
+title: Settings
+---
 
+# Settings
 The NemoVR-Viewer behavior can be configured using the:
 
 ```text

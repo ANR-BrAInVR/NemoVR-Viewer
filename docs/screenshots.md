@@ -1,4 +1,8 @@
+---
+title: Screenshots
+---
 
+# Screenshots
 This page presents examples of the NemoVR-Viewer graphical interface and visualization modes.
 
 ---

@@ -1,4 +1,8 @@
+---
+title: Videos
+---
 
+# Videos
 This page contains example recordings generated with NemoVR-Viewer.
 
 ---

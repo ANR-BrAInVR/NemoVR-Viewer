@@ -304,3 +304,20 @@ A standard usage workflow is:
 7. Configure visualization options
 8. Start playback
 9. Analyze trajectories and videos
+
+
+---
+
+## Expected Results Structure
+
+The viewer expects tracking-generated files organized as follows:
+
+```text
+Results/
+└── EXPERIMENT_ID/
+    └── SUBJECT_ID/
+        ├── Trial_cam0.mp4
+        ├── Trial_cam1.mp4
+        ├── Trial_DLC2D.npy
+        ├── Trial_DLC3D.npy
+        └── ...

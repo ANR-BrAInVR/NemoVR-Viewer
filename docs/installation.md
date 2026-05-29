@@ -152,7 +152,7 @@ The same environment can be reused for several NemoVR components, including:
 
 Before creating the environment, it is recommended to verify that an environment named:
 
-```text id="m9t3el"
+```text
 DLC-live3
 ```
 
@@ -160,7 +160,7 @@ does not already exist on your computer.
 
 You can list existing Conda environments with:
 
-```bash id="6k7r1n"
+```bash
 conda env list
 ```
 
@@ -168,19 +168,19 @@ If an environment named `DLC-live3` already exists, you can reuse it directly.
 
 Otherwise, create the environment with:
 
-```bash id="9nn2u4"
+```bash
 conda create --name DLC-live3 -c conda-forge python=3.12 numpy matplotlib pyqt opencv
 ```
 
 During installation, Conda may ask:
 
-```text id="vcw4pn"
+```text
 Proceed ([y]/n)?
 ```
 
 Type:
 
-```text id="qzj3bw"
+```text
 y
 ```
 

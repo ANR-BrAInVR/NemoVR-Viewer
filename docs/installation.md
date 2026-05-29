@@ -2,9 +2,13 @@
 title: Installation
 ---
 
-This page explains how to install and launch the NemoVR-Viewer application step by step.
+This page explains how to install NemoVR-Viewer step by step on a computer.
 
-The goal is to help users who may not be familiar with Python or programming environments.
+These installation steps only need to be completed once during the initial setup of the viewer.
+
+After the installation is complete, launching the application only requires activating the environment and running the viewer.
+
+The goal is to help users who may not be familiar with Python, terminals or programming environments.
 
 ---
 
@@ -14,7 +18,9 @@ NemoVR-Viewer uses a Python environment managed with **Conda**.
 
 Conda allows the project to install all required dependencies automatically and avoids conflicts with other Python installations on your computer.
 
-We recommend installing **Miniconda**, which is lightweight and easy to use.
+We recommend installing **Miniconda**, which provides a lightweight Conda installation and all required environment management tools.
+
+Users already working with Anaconda can use it as well.
 
 Download Miniconda here:
 
@@ -26,7 +32,6 @@ https://docs.conda.io/en/latest/miniconda.html
 
 Install Miniconda using the default installation settings.
 
-After installation, restart your terminal.
 
 ---
 
@@ -58,9 +63,13 @@ Open a standard terminal.
 
 # 3. Clone the repository
 
-Choose a location on your computer where you want to store the NemoVR-Viewer project files.
+The NemoVR-Viewer project files must now be downloaded to your computer.
+
+Choose a location where you would like to store the project folder.
 
 For example, you may want to place the project on your Desktop.
+
+The following steps will download the complete NemoVR-Viewer project into the selected folder.
 
 ---
 
@@ -106,7 +115,9 @@ Run:
 git clone https://github.com/ANR-BrAInVR/NemoVR-Viewer.git
 ```
 
-This downloads all project files to your computer.
+This command downloads the complete NemoVR-Viewer project from GitHub to your computer.
+
+All project files will automatically be copied into the selected folder.
 
 A new folder named:
 
@@ -115,8 +126,6 @@ NemoVR-Viewer
 ```
 
 will automatically be created.
-
----
 
 ## Move into the project folder
 
@@ -130,37 +139,58 @@ Your terminal is now located inside the project directory.
 
 # 4. Create the Conda environment (ONE TIME ONLY)
 
-This step only needs to be done once after downloading the project.
+This step only needs to be completed once after downloading the project.
 
-The following command creates an isolated Python environment containing all required libraries.
+The following command creates an isolated Python environment containing all libraries required by the NemoVR ecosystem.
 
-Run:
+The same environment can be reused for several NemoVR components, including:
 
-```bash
+* viewer
+* tracking
+* post-processing
+* rendering tools
+
+Before creating the environment, it is recommended to verify that an environment named:
+
+```text id="m9t3el"
+DLC-live3
+```
+
+does not already exist on your computer.
+
+You can list existing Conda environments with:
+
+```bash id="6k7r1n"
+conda env list
+```
+
+If an environment named `DLC-live3` already exists, you can reuse it directly.
+
+Otherwise, create the environment with:
+
+```bash id="9nn2u4"
 conda create --name DLC-live3 -c conda-forge python=3.12 numpy matplotlib pyqt opencv
 ```
 
 During installation, Conda may ask:
 
-```text
+```text id="vcw4pn"
 Proceed ([y]/n)?
 ```
 
 Type:
 
-```text
+```text id="qzj3bw"
 y
 ```
 
 and press Enter.
 
-The installation may take several minutes.
-
----
+The installation may take several minutes depending on your internet connection and computer performance.
 
 # 5. Activate the environment
 
-Each time you want to use NemoVR-Viewer, you must activate the environment first.
+Each time you want to use NemoVR-Viewer, the Conda environment must first be activated.
 
 Run:
 
@@ -176,7 +206,7 @@ Once activated, your terminal should display:
 
 at the beginning of the command line.
 
----
+Keep this terminal window open, as it will later be used to launch the viewer.
 
 # 6. Configure the results directory
 
@@ -218,76 +248,63 @@ Save the file once the modification is complete.
 
 # 7. Launch the viewer
 
-Once the environment is activated and the settings are configured, launch the application with:
+After configuring `Settings.txt`, return to the terminal window used previously.
 
-```bash
-python Viewer.py
+Before launching the viewer, verify that the Conda environment is still activated.
+
+The terminal should display:
+
+```text
+(DLC-live3)
 ```
 
-The graphical interface should now open.
+at the beginning of the command line.
 
----
-
-# 8. Launch procedure for future sessions
-
-After the initial setup, you do NOT need to reinstall everything.
-
-For future sessions, the procedure is simply:
-
-## Step 1
-
-Open a terminal.
-
----
-
-## Step 2
-
-Move into the project folder:
-
-```bash
-cd NemoVR-Viewer
-```
-
----
-
-## Step 3
-
-Activate the environment:
+If the environment is no longer active, run:
 
 ```bash
 conda activate DLC-live3
 ```
 
----
-
-## Step 4
-
-Launch the viewer:
+Then launch the viewer with:
 
 ```bash
 python Viewer.py
 ```
 
----
+The NemoVR-Viewer graphical interface should now open.
+
+# 8. Next steps
+
+Once the viewer is running, detailed instructions for using the graphical interface are available in the `Usage` documentation page.
+
+The usage guide explains how to:
+
+* select tracking files
+* choose subjects and trials
+* configure visualization options
+* control playback
+* export videos
+* navigate through recordings
+
+See:
+
+```text id="qpn3ga"
+Usage
+```
 
 # 9. Expected results structure
 
-The viewer expects tracking-generated files organized as follows:
+The viewer expects tracking-generated files organized according to the NemoVR project architecture.
 
-```text
-Results/
-└── EXPERIMENT_ID/
-    └── SUBJECT_ID/
-        ├── Trial_cam0.mp4
-        ├── Trial_cam1.mp4
-        ├── Trial_DLC2D.npy
-        ├── Trial_DLC3D.npy
-        └── ...
-```
+Detailed information about:
 
-The `.npy` files are generated by the NemoVR tracking pipeline.
+* expected folder organization
+* tracking-generated files
+* video naming conventions
+* DLC and reconstruction files
 
----
+is available in the `Usage` documentation page.
 
 # 10. Troubleshooting
 

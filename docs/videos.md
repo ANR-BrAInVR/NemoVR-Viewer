@@ -18,7 +18,7 @@ This example demonstrates:
 
 Video file:
 
-```text id="pr6n7u"
+```text
 assets/Recording 2026-05-28 145701.mp4
 ```
 
@@ -35,7 +35,7 @@ This example demonstrates:
 
 Video file:
 
-```text id="r7a8ms"
+```text
 assets/Recording 2026-05-28 150223.mp4
 ```
 
@@ -45,7 +45,7 @@ assets/Recording 2026-05-28 150223.mp4
 
 You can add your own recordings to the documentation by placing video files inside:
 
-```text id="k3m1wy"
+```text
 docs/assets/
 ```
 
@@ -66,7 +66,7 @@ Recommended video formats:
 
 Video export can be enabled directly from the GUI using:
 
-```text id="tw1m9s"
+```text
 Save video output
 ```
 

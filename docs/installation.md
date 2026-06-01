@@ -235,12 +235,6 @@ And open it by double-clicking on it.
 
 The file can be edited with the default text editor installed on your computer.
 
-Detailed information about all available viewer parameters is available in the [Settings](settings.md) documentation page.
-
----
-
-Inside the file, locate the following line:
-
 ```text
 resultsDir
 ```
@@ -256,6 +250,8 @@ resultsDir    'C:/Users/Desktop/Results'
 Use the full absolute path to your tracking results directory.
 
 Save the file once the modification is complete.
+
+> Additional viewer parameters and visualization options are described in the [Settings](settings.md) documentation page.
 
 ---
 

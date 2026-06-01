@@ -13,6 +13,7 @@ It allows synchronized playback of multi-camera recordings together with 2D/3D t
 </video>
 
 *Figure 1 — Example of synchronized multi-camera visualization of clownfish tracking with DeepLabCut markers and trajectory overlays.*
+
 ---
 
 ## Features

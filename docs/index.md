@@ -1,16 +1,18 @@
 ---
 layout: home
 title: Home
+nav_order: 1
 ---
 
 NemoVR-Viewer is a graphical application designed to visualize fish tracking experiments.
 
 It allows synchronized playback of multi-camera recordings together with 2D/3D tracking data and DeepLabCut pose estimation results.
 
-![Viewer](assets/viewer_2dvideo.png)
+<video controls autoplay loop muted width="100%">
+  <source src="assets/recording_2d.mp4" type="video/mp4">
+</video>
 
 *Figure 1 — Example of synchronized multi-camera visualization of clownfish tracking with DeepLabCut markers and trajectory overlays.*
-
 ---
 
 ## Features

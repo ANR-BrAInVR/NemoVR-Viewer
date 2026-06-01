@@ -1,5 +1,6 @@
 ---
 title: Installation
+nav_order: 2
 ---
 
 This page explains how to install NemoVR-Viewer step by step on a computer.

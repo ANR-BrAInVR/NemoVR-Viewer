@@ -1,5 +1,6 @@
 ---
 title: Usage
+nav_order: 3
 ---
 
 This page explains how to use NemoVR-Viewer after the installation has been completed.

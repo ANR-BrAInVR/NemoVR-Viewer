@@ -1,6 +1,7 @@
 ---
-
-## title: Settings
+title: Settings
+nav_order: 4
+---
 
 The NemoVR-Viewer behavior can be configured using the:
 

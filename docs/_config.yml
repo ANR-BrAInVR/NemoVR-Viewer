@@ -5,9 +5,5 @@ remote_theme: just-the-docs/just-the-docs
 plugins:
   - jekyll-remote-theme
 
-header_pages:
-  - installation.md
-  - usage.md
-  - settings.md
-  - screenshots.md
-  - videos.md
+aux_links:
+  GitHub Repository: https://github.com/ANR-BrAInVR/NemoVR-Viewer

@@ -142,9 +142,9 @@ Your terminal is now located inside the project directory.
 
 ---
 
-# 4. Create the Conda environment (ONE TIME ONLY)
+# 4. Create the Conda environment 
 
-This step only needs to be completed once after downloading the project.
+**This step only needs to be completed once after downloading the project.**
 
 The following command creates an isolated Python environment containing all libraries required by the NemoVR ecosystem.
 
@@ -327,8 +327,6 @@ conda init powershell
 
 if you want to use PowerShell.
 
----
-
 ## Viewer does not open
 
 Make sure the environment is activated:
@@ -338,8 +336,6 @@ Make sure the environment is activated:
 ```
 
 should appear in the terminal.
-
----
 
 ## Missing result files
 

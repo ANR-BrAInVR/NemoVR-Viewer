@@ -20,7 +20,7 @@ Features visible in this mode include:
 * real-time visualization
 
 ![2D Viewer](assets/viewer_2dvideo.png)
-
+*Figure 1 — Example of synchronized multi-camera visualization of clownfish tracking with DeepLabCut markers and trajectory overlays.*
 ---
 
 # 3D Trajectory Visualization
@@ -35,7 +35,7 @@ This mode is useful for:
 * multi-camera reconstruction inspection
 
 ![3D Viewer](assets/viewer_3dplots.png)
-
+*Figure 2 — Example of 3D reconstructed trajectory visualization generated from multi-camera tracking data.*
 ---
 
 # GUI Features

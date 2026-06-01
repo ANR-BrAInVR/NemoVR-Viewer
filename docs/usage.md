@@ -12,8 +12,6 @@ The viewer allows interactive visualization of tracking experiments, synchronize
 
 Before launching the viewer, open a terminal.
 
-## On Windows
-
 Open:
 
 ```text
@@ -28,12 +26,6 @@ PowerShell
 
 ---
 
-## On Linux
-
-Open a standard terminal.
-
----
-
 # 2. Move into the project folder
 
 Navigate to the folder where NemoVR-Viewer was downloaded.
@@ -42,12 +34,6 @@ Example on Windows:
 
 ```bash
 cd "C:\Users\YOUR_USERNAME\Desktop\NemoVR-Viewer"
-```
-
-Example on Linux:
-
-```bash
-cd ~/Desktop/NemoVR-Viewer
 ```
 
 ---
@@ -321,3 +307,4 @@ Results/
         ├── Trial_DLC2D.npy
         ├── Trial_DLC3D.npy
         └── ...
+```

@@ -1,6 +1,6 @@
 ---
-title: Videos
----
+
+## title: Videos
 
 This page contains example recordings generated with NemoVR-Viewer.
 
@@ -15,11 +15,11 @@ This example demonstrates:
 * tracking trajectories
 * real-time playback
 
-Video file:
+<video controls width="100%">
+  <source src="assets/recording_2d.mp4" type="video/mp4">
+</video>
 
-```text
-assets/Recording 2026-05-28 145701.mp4
-```
+*Figure 1 — Example of synchronized 2D visualization with DLC overlays.*
 
 ---
 
@@ -32,11 +32,11 @@ This example demonstrates:
 * multi-animal visualization
 * spatial movement analysis
 
-Video file:
+<video controls width="100%">
+  <source src="assets/recording_3d.mp4" type="video/mp4">
+</video>
 
-```text
-assets/Recording 2026-05-28 150223.mp4
-```
+*Figure 2 — Example of 3D reconstructed trajectory visualization generated from multi-camera tracking data.*
 
 ---
 
@@ -69,7 +69,7 @@ Video export can be enabled directly from the GUI using:
 Save video output
 ```
 
-Exported videos include:
+Exported videos may include:
 
 * tracking overlays
 * DLC markers

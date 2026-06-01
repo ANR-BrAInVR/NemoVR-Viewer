@@ -12,36 +12,27 @@ The goal is to help users who may not be familiar with Python, terminals or prog
 
 ---
 
-# 1. Install Miniconda
+# 1. Install Anaconda
 
 NemoVR-Viewer uses a Python environment managed with **Conda**.
 
 Conda allows the project to install all required dependencies automatically and avoids conflicts with other Python installations on your computer.
 
-We recommend installing **Miniconda**, which provides a lightweight Conda installation and all required environment management tools.
+We recommend installing **Anaconda**, which provides Conda together with all required environment management tools.
 
-Users already working with Anaconda can use it as well.
-
-Download Miniconda here:
-
-* Windows/Linux installer:
+Download Anaconda here:
 
 ```text
-https://docs.conda.io/en/latest/miniconda.html
+https://www.anaconda.com/download
 ```
 
-Install Miniconda using the default installation settings.
-
-
----
+Install Anaconda using the default installation settings.
 
 # 2. Open a terminal
 
 You will now create the Python environment required for the viewer.
 
-## On Windows
-
-Open:
+On Windows, open:
 
 ```text
 Anaconda Prompt
@@ -52,14 +43,6 @@ or:
 ```text
 PowerShell
 ```
-
----
-
-## On Linux
-
-Open a standard terminal.
-
----
 
 # 3. Clone the repository
 

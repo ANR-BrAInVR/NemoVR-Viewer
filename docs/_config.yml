@@ -1,6 +1,9 @@
 title: NemoVR-Viewer
 description: Fish tracking visualization and DeepLabCut analysis
-theme: minima
+remote_theme: just-the-docs/just-the-docs
+
+plugins:
+  - jekyll-remote-theme
 
 header_pages:
   - installation.md

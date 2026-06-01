@@ -30,7 +30,23 @@ Install Anaconda using the default installation settings.
 
 ---
 
-## Conda is not recognized in PowerShell
+
+# 2. Open a terminal
+
+You will now create the Python environment required for the viewer.
+
+On Windows, open:
+
+```text
+Anaconda Prompt
+```
+
+or:
+
+```text
+PowerShell
+```
+### Conda is not recognized in PowerShell
 
 On Windows, `conda` may not be available immediately in PowerShell.
 
@@ -51,24 +67,6 @@ conda init powershell
 Then close PowerShell and open it again.
 
 After that, the `conda` command should work in PowerShell.
-
----
-
-# 2. Open a terminal
-
-You will now create the Python environment required for the viewer.
-
-On Windows, open:
-
-```text
-Anaconda Prompt
-```
-
-or:
-
-```text
-PowerShell
-```
 
 ---
 

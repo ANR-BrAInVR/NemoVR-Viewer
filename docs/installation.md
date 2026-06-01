@@ -28,6 +28,32 @@ https://www.anaconda.com/download
 
 Install Anaconda using the default installation settings.
 
+---
+
+## Conda is not recognized in PowerShell
+
+On Windows, `conda` may not be available immediately in PowerShell.
+
+The simplest solution is to use:
+
+```text
+Anaconda Prompt
+```
+
+instead of PowerShell.
+
+If you want to use PowerShell, open Anaconda Prompt once and run:
+
+```bash
+conda init powershell
+```
+
+Then close PowerShell and open it again.
+
+After that, the `conda` command should work in PowerShell.
+
+---
+
 # 2. Open a terminal
 
 You will now create the Python environment required for the viewer.
@@ -43,6 +69,8 @@ or:
 ```text
 PowerShell
 ```
+
+---
 
 # 3. Clone the repository
 
@@ -82,14 +110,6 @@ cd "C:\Users\johnsmith\Desktop"
 
 ---
 
-## Example on Linux
-
-```bash
-cd ~/Desktop
-```
-
----
-
 ## Clone the repository
 
 Run:
@@ -110,6 +130,8 @@ NemoVR-Viewer
 
 will automatically be created.
 
+---
+
 ## Move into the project folder
 
 Run:
@@ -119,6 +141,8 @@ cd NemoVR-Viewer
 ```
 
 Your terminal is now located inside the project directory.
+
+---
 
 # 4. Create the Conda environment (ONE TIME ONLY)
 
@@ -171,6 +195,8 @@ and press Enter.
 
 The installation may take several minutes depending on your internet connection and computer performance.
 
+---
+
 # 5. Activate the environment
 
 Each time you want to use NemoVR-Viewer, the Conda environment must first be activated.
@@ -191,6 +217,8 @@ at the beginning of the command line.
 
 Keep this terminal window open, as it will later be used to launch the viewer.
 
+---
+
 # 6. Configure the results directory
 
 Before launching the viewer, you must configure the location of your tracking results.
@@ -199,7 +227,7 @@ At this stage, you are no longer working in the terminal.
 
 Instead, open the project folder on your computer using the file explorer.
 
-Locate the file:
+Locate the configuration file:
 
 ```text
 Settings.txt
@@ -208,6 +236,8 @@ Settings.txt
 And open it by double-clicking on it.
 
 The file can be edited with the default text editor installed on your computer.
+
+Detailed information about all available viewer parameters is available in the [Settings](settings.md) documentation page.
 
 ---
 
@@ -228,6 +258,8 @@ resultsDir    'C:/Users/Desktop/Results'
 Use the full absolute path to your tracking results directory.
 
 Save the file once the modification is complete.
+
+---
 
 # 7. Launch the viewer
 
@@ -257,11 +289,14 @@ python Viewer.py
 
 The NemoVR-Viewer graphical interface should now open.
 
+A complete overview of the graphical interface is available in the [Usage](usage.md) documentation page.
+
+---
+
 # 8. Next steps
 
-Once the viewer is running, detailed instructions for using the graphical interface are available in the `Usage` documentation page.
-
-The usage guide explains how to:
+Detailed instructions for using the graphical interface are available in the [Usage](usage.md) documentation page.
+The guide explains how to:
 
 * select tracking files
 * choose subjects and trials
@@ -270,24 +305,15 @@ The usage guide explains how to:
 * export videos
 * navigate through recordings
 
-See:
-
-```text
-Usage
-```
+---
 
 # 9. Expected results structure
 
 The viewer expects tracking-generated files organized according to the NemoVR project architecture.
 
-Detailed information about:
+Detailed information about the expected results structure and tracking-generated files is available in the [Usage](usage.md) documentation page.
 
-* expected folder organization
-* tracking-generated files
-* video naming conventions
-* DLC and reconstruction files
-
-is available in the `Usage` documentation page.
+---
 
 # 10. Troubleshooting
 
@@ -299,7 +325,13 @@ If the terminal says:
 conda: command not found
 ```
 
-restart your terminal after installing Miniconda.
+open Anaconda Prompt, or run:
+
+```bash
+conda init powershell
+```
+
+if you want to use PowerShell.
 
 ---
 
@@ -322,3 +354,13 @@ Verify that:
 * `resultsDir` is correctly configured
 * tracking files exist
 * the folder structure matches the expected format
+
+
+---
+
+## Additional resources
+
+- [Viewer Settings](settings.md)
+- [Usage Guide](usage.md)
+- [Project Homepage](index.md)
+- [GitHub Repository](https://github.com/ANR-BrAInVR/NemoVR-Viewer)

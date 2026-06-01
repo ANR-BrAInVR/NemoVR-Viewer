@@ -26,13 +26,7 @@ It allows synchronized playback of multi-camera recordings together with 2D/3D t
 
 NemoVR-Viewer uses a Conda environment.
 
-We recommend installing:
-
-* Anaconda
-
-Download Anaconda here:
-
-https://www.anaconda.com/download
+We recommend installing Anaconda (https://www.anaconda.com/download)
 
 Create the environment with:
 
@@ -87,3 +81,19 @@ https://anr-brainvr.github.io/NemoVR-Viewer/
 GitHub repository:
 
 https://github.com/ANR-BrAInVR/NemoVR-Viewer
+
+
+---
+
+## Credits
+
+NemoVR-Viewer was developed within the BrAInVR project.
+
+Scientific coordination and experimental framework:
+
+* Manuel Vidal
+* Institut de Neurosciences de la Timone (INT)
+
+Funding:
+
+* French National Research Agency (ANR)

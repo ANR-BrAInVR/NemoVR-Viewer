@@ -40,27 +40,6 @@ This example demonstrates:
 
 ---
 
-# Adding Your Own Videos
-
-You can add your own recordings to the documentation by placing video files inside:
-
-```text
-docs/assets/
-```
-
-Then reference them directly in the markdown pages.
-
----
-
-# Supported Formats
-
-Recommended video formats:
-
-* `.mp4`
-* H264 encoded videos
-
----
-
 # Notes
 
 Video export can be enabled directly from the GUI using:

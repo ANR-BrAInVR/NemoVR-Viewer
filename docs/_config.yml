@@ -9,7 +9,4 @@ plugins:
 aux_links:
   GitHub Repository: https://github.com/ANR-BrAInVR/NemoVR-Viewer
 
-just_the_docs:
-  color_scheme_toggle: true
-
 enable_copy_code_button: true

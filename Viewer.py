@@ -43,8 +43,9 @@ keyRadius = 3       # Maximal radius size of the markers for monitoring (when in
 cyclopRadius = 5    # Maximal radius size of cyclop for monitoring (when inference p=1)
 cyclopColor = 0     # Detection or cyclop marker center color (white)
 
-IP = {'Tracking': '192.168.0.2', 'Rendering': '192.168.0.1'}
+IP = {'Tracking': '192.168.0.2', 'Rendering': '192.168.0.1', 'Localhost': '127.0.0.1'}
 UDPserverRendering = (IP['Rendering'], 50771)
+# UDPserverRendering = (IP['Localhost'], 50771)     # For debugging
 
 # Settings place holder
 class Settings:

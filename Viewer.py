@@ -44,8 +44,8 @@ cyclopRadius = 5    # Maximal radius size of cyclop for monitoring (when inferen
 cyclopColor = 0     # Detection or cyclop marker center color (white)
 
 IP = {'Tracking': '192.168.0.2', 'Rendering': '192.168.0.1', 'Localhost': '127.0.0.1'}
-# UDPserverRendering = (IP['Rendering'], 50771)
-UDPserverRendering = (IP['Localhost'], 50771)     # For debugging
+UDPserverRendering = (IP['Rendering'], 50771)
+# UDPserverRendering = (IP['Localhost'], 50771)     # For debugging
 
 # Settings place holder
 class Settings:
@@ -150,7 +150,7 @@ class Viewer:
         plt.close()
 
         # Give time for processes to end
-        time.sleep(0.5)
+        # time.sleep(0.5)
 
 
     def VideoPlayer(self):

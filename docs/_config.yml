@@ -1,0 +1,12 @@
+title: NemoVR-Viewer
+description: Fish tracking visualization and DeepLabCut analysis
+
+remote_theme: just-the-docs/just-the-docs
+
+plugins:
+  - jekyll-remote-theme
+
+aux_links:
+  GitHub Repository: https://github.com/ANR-BrAInVR/NemoVR-Viewer
+
+enable_copy_code_button: true

@@ -4,7 +4,7 @@ speciesName	'Clownfish'		# String: name of the fish species to be tracked
 imgMode		'crop'			# string: image monitoring mode: 'full' or 'crop'
 xMonitWin	300				# int: x coordinate of left edge of monitoring window (on linux: 340, on windows: 320)
 resultsDir	'D:\Results'	# String: results directory, ssd or devs '/disks/ssd/Results' or 'E:\Results'
-expID		'CP_FVAPV_clowns'	# string: expID, use '' if you want to use menu input
+expID		''				# string: expID, use '' if you want to use menu input
 ext2D		'_DLC2D (new)'	# string: file extension for 2D results (ex. '_pos2D+DLC2D' or '_pos2D+DLC (new)')
 ext3D		'_DLC3D (new)'	# string: file extension for 3D results (ex. '_pos3D+DLC3D' or '_pos3D+DLC (new)')
 saveVideos	False			# bool: save output videos with results overlay

@@ -101,8 +101,10 @@ class Viewer:
             self.expID.value = self.s.expID
             self.resLogFile = os.path.join(self.s.resultsDir, self.s.expID, self.s.expID + '_files.tsv')
             # was self.s.resultsDir + '/' + self.expID + '/' + self.expID + '_files.tsv'
+        else:
+            self.resLogFile = ''
 
-        # print('trailFrames: %d' % self.trailFrames.value)
+            # print('trailFrames: %d' % self.trailFrames.value)
 
         # Starts GUI
         self.ViewerUIproc = mp.Process(target=self.StartViewerUI)
